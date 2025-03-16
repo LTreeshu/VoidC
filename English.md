@@ -110,7 +110,7 @@
 
 | Syntax       | Description                                 | Example                                                 |
 | ------------ | ------------------------------------------- | ------------------------------------------------------- |
-| `structof()` | Infer structure address from member address | `struct Point* pPtr = structof(yPtr, struct Point, y);` |
+| `structof()` | Infer structure address from member address | `void struct Point pPtr = structof(yPtr, struct Point, y);` |
 
 ---
 
@@ -299,6 +299,11 @@ func int32_t main() {
     // Use structure
     struct Point p = {10, 20};
     printf("Point: (%d, %d)\n", p.x, p.y);
+
+    // use structof get struct addr
+    void int32_t yPtr = void(p.y);  // 获取结构体成员的地址
+    void struct Point pPtr = structof(yPtr, struct Point, y);  // 推断结构体地址
+    printf("Point (via structof): (%d, %d)\n", of(pPtr).x, of(pPtr).y);
 
     // Use union
     union Data data;
