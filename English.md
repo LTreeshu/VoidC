@@ -300,9 +300,9 @@ func int32_t main() {
     struct Point p = {10, 20};
     printf("Point: (%d, %d)\n", p.x, p.y);
 
-    // use structof get struct addr
-    void int32_t yPtr = void(p.y);  // 获取结构体成员的地址
-    void struct Point pPtr = structof(yPtr, struct Point, y);  // 推断结构体地址
+    // Use structof to infer structure address
+    void int32_t yPtr = void(p.y);  // Get the address of the structure member
+    void struct Point pPtr = structof(yPtr, struct Point, y);  // Infer structure address
     printf("Point (via structof): (%d, %d)\n", of(pPtr).x, of(pPtr).y);
 
     // Use union
