@@ -17,44 +17,44 @@ const VAR_PJ(varname1, varname2) varname1##varname2;
 // Use # to stringify variable names
 const VAR_TO_STRING(var) #var;
 
-// Define structure
+// Define a structure
 struct Point {
     int32_t x;
     int32_t y;
 };
 
-// Define union
+// Define a union
 union Data {
     int32_t i;
     float32_t f;
 };
 
-// Define enum
+// Define an enumeration
 enum Color { RED, GREEN, BLUE };
 
-// Define template function
+// Define a template function
 template <typename T>
 func void printValue(void ptr) {
     void T valuePtr = voidof(ptr, T);
     printf("Value: %d\n", of(valuePtr));
 }
 
-// Define inline function
+// Define an inline function
 inline int32_t ADD(int32_t A, int32_t B) {
     return A + B;
 }
 
-// Unspecified parameter types
+// Unspecified type parameters
 inline FUNC(x, n) {
     return x * n;
 }
 
-// Multi-parameter passing
+// Multi-argument passing
 inline PRINT(...) {
     printf(__VA_ARGS__);
 }
 
-// Combine unspecified types and multi-parameter passing
+// Combine unspecified type and multi-argument passing
 inline LOG(x, ...) {
     printf("Value: %d\n", x);
     printf(__VA_ARGS__);
@@ -64,7 +64,7 @@ inline LOG(x, ...) {
 inline CONCAT(a, b) a ## b
 inline STR(var) #var
 
-// New: inline with LOG() and # usage
+// New: inline combined with LOG() and # usage
 inline LOG_VAR(var) {
     printf("Variable name: %s, Value: %d\n", #var, var);
 }
@@ -109,6 +109,11 @@ func int32_t main() {
     struct Point p = {10, 20};
     printf("Point: (%d, %d)\n", p.x, p.y);
 
+    // Use structof to infer structure address
+    void int32_t yPtr = void(p.y);  // Get the address of the structure member
+    void struct Point pPtr = structof(yPtr, struct Point, y);  // Infer structure address
+    printf("Point (via structof): (%d, %d)\n", of(pPtr).x, of(pPtr).y);
+
     // Use union
     union Data data;
     data.i = 42;
@@ -116,7 +121,7 @@ func int32_t main() {
     data.f = 3.14f;
     printf("Union Value (float): %f\n", data.f);
 
-    // Use enum
+    // Use enumeration
     enum Color color = GREEN;
     switch (color) {
         case RED:
@@ -141,13 +146,13 @@ func int32_t main() {
     }
 
     // Use pointers
-    void int32_t numPtr = void(num32);  // Get address of num32
-    int32_t value = of(numPtr);  // Dereference pointer
+    void int32_t numPtr = void(num32);  // Get the address of num32
+    int32_t value = of(numPtr);  // Dereference the pointer
     printf("Value: %d\n", value);
 
     // Use voidof to convert pointer type
     void int32_t ptr = voidof(numPtr, int32_t);  // Convert generic pointer to int32_t pointer
-    int32_t value2 = of(ptr);  // Dereference pointer
+    int32_t value2 = of(ptr);  // Dereference the pointer
     printf("Value: %d\n", value2);
 
     // Use as to convert pointer type and dereference
@@ -164,20 +169,20 @@ func int32_t main() {
     free(dynamicPtr);
 
     // Use template function
-    printValue<int32_t>(void(num32));  // Print value of num32
+    printValue<int32_t>(void(num32));  // Print the value of num32
 
     // Use inline function
     int32_t result = ADD(10, 20);
     printf("Result: %d\n", result);
 
-    // Use unspecified parameter types
+    // Use unspecified type parameters
     int32_t funcResult = FUNC(10, 2);
     printf("FUNC Result: %d\n", funcResult);  // Outputs 20
 
-    // Use multi-parameter passing
+    // Use multi-argument passing
     PRINT("Hello, %s! The answer is %d.\n", "VoidC", 42);  // Outputs "Hello, VoidC! The answer is 42."
 
-    // Combine unspecified types and multi-parameter passing
+    // Combine unspecified type and multi-argument passing
     LOG(10, "Additional info: %s\n", "This is VoidC!");  // Outputs "Value: 10" and "Additional info: This is VoidC!"
 
     // Use va_with
@@ -200,7 +205,7 @@ func int32_t main() {
     printf("var2: %d\n", var2);
     printf("var1 name: %s\n", STR(var1));  // Stringify variable name
 
-    // New: inline with LOG() and # usage
+    // New: inline combined with LOG() and # usage
     int32_t testVar = 123;
     LOG_VAR(testVar);  // Outputs "Variable name: testVar, Value: 123"
 
