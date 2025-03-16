@@ -5,6 +5,6 @@ A new C language standard ， to void a better programing world!
 
 语法文档|Document
 
-[中文](./中文.md) | [English](./English.md)
+[中文](./Chinese.md) | [English](./English.md)
 
 
