@@ -301,6 +301,11 @@ func int32_t main() {
     struct Point p = {10, 20};
     printf("Point: (%d, %d)\n", p.x, p.y);
 
+    // 使用 structof 推断结构体地址
+    void int32_t yPtr = void(p.y);  // 获取结构体成员的地址
+    void struct Point pPtr = structof(yPtr, struct Point, y);  // 推断结构体地址
+    printf("Point (via structof): (%d, %d)\n", of(pPtr).x, of(pPtr).y);
+
     // 使用共用体
     union Data data;
     data.i = 42;
