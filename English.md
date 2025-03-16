@@ -1,7 +1,9 @@
----
 ## VoidC Language Final Syntax Table
+---
+
 
 ### 1. **Basic Data Types**
+
 
 | Type         | Description                   | Example                 |
 | ------------ | ----------------------------- | ----------------------- |
