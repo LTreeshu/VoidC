@@ -111,7 +111,7 @@
 
 | 语法           | 描述            | 示例                                                      |
 | ------------ | ------------- | ------------------------------------------------------- |
-| `structof()` | 通过成员地址推断结构体地址 | `struct Point* pPtr = structof(yPtr, struct Point, y);` |
+| `structof()` | 通过成员地址推断结构体地址 | `void struct Point pPtr = structof(yPtr, struct Point, y);` |
 
 ---
 
