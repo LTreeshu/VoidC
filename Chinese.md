@@ -1,417 +1,844 @@
-以下是 **VoidC 语言** 的 **最终语法表** 和 **完整示例代码**，包含了所有核心特性和语法规则。
-
----
-
-## VoidC 语言最终语法表
-
-### 1. **基本数据类型**
-
-| 类型           | 描述              | 示例                      |
-| ------------ | --------------- | ----------------------- |
-| `int8_t`     | 8 位有符号整型        | `int8_t num = 42;`      |
-| `int16_t`    | 16 位有符号整型       | `int16_t num = 42;`     |
-| `int32_t`    | 32 位有符号整型       | `int32_t num = 42;`     |
-| `int64_t`    | 64 位有符号整型       | `int64_t num = 42;`     |
-| `uint8_t`    | 8 位无符号整型        | `uint8_t num = 42;`     |
-| `uint16_t`   | 16 位无符号整型       | `uint16_t num = 42;`    |
-| `uint32_t`   | 32 位无符号整型       | `uint32_t num = 42;`    |
-| `uint64_t`   | 64 位无符号整型       | `uint64_t num = 42;`    |
-| `float32_t`  | 32 位单精度浮点型      | `float32_t pi = 3.14f;` |
-| `float64_t`  | 64 位双精度浮点型      | `float64_t pi = 3.14;`  |
-| `fixedf32_t` | 32 位定点数（Q16.16） | `fixedf32_t num = 1.5;` |
-| `fixedf64_t` | 64 位定点数（Q32.32） | `fixedf64_t num = 1.5;` |
-| `char`       | 字符类型            | `char ch = 'A';`        |
-| `string`     | 字符串类型           | `string str = "Hello";` |
-
----
-
-### 2. **类型定义与类型判断**
-
-| 语法         | 描述      | 示例                       |
-| ---------- | ------- | ------------------------ |
-| `typedef`  | 定义类型别名  | `typedef int32_t myInt;` |
-| `typeof()` | 获取变量的类型 | `typeof(myVar) varType;` |
-
----
-
-### 3. **类型对齐**
-
-| 语法             | 描述         | 示例                    |
-| -------------- | ---------- | --------------------- |
-| `typepack n{}` | 指定结构体的对齐方式 | `typepack 4 { ... };` |
-
----
-
-### 4. **类型长度**
-
-| 语法         | 描述           | 示例                               |
-| ---------- | ------------ | -------------------------------- |
-| `sizeof()` | 获取类型或变量的字节大小 | `size_t size = sizeof(int32_t);` |
-
----
-
-### 5. **指针类型**
-
-| 语法                | 描述            | 示例                    |
-| ----------------- | ------------- | --------------------- |
-| `void`            | 通用指针类型        | `void ptr;`           |
-| `void type ptr`   | 单重指针          | `void int32_t ptr;`   |
-| `void n type ptr` | 多重指针（`n` 为层级） | `void 2 int32_t ptr;` |
-| `void n void ptr` | 通用多重指针        | `void 2 void ptr;`    |
-
----
-
-### 6. **解引用指针**
-
-| 语法              | 描述              | 示例                                         |
-| --------------- | --------------- | ------------------------------------------ |
-| `of()`          | 解引用指针           | `int32_t value = of(ptr);`                 |
-| `voidof()`      | 将通用指针还原为具体类型的指针 | `void int32_t ptr = voidof(ptr, int32_t);` |
-| `as(type, ptr)` | 转换指针类型并解引用      | `int32_t value = as(int32_t, ptr);`        |
-
----
-
-### 7. **获取变量地址**
-
-| 语法       | 描述      | 示例                      |
-| -------- | ------- | ----------------------- |
-| `void()` | 获取变量的地址 | `void ptr = void(num);` |
-
----
-
-### 8. **内存管理**
-
-| 语法        | 描述     | 示例                                   |
-| --------- | ------ | ------------------------------------ |
-| `alloc()` | 动态分配内存 | `void ptr = alloc(sizeof(int32_t));` |
-| `free()`  | 释放内存   | `free(ptr);`                         |
-
----
-
-### 9. **结构体、共用体和枚举**
-
-| 语法       | 描述     | 示例                                        |
-| -------- | ------ | ----------------------------------------- |
-| `struct` | 定义结构体  | `struct Point { int32_t x; int32_t y; };` |
-| `union`  | 定义共用体  | `union Data { int32_t i; float32_t f; };` |
-| `enum`   | 定义枚举类型 | `enum Color { RED, GREEN, BLUE };`        |
-
----
-
-### 10. **数组和动态数组**
-
-| 语法                | 描述     | 示例                                                |
-| ----------------- | ------ | ------------------------------------------------- |
-| `arry[type:n]`    | 固定大小数组 | `arry[char:3] greeting = "hi";`                   |
-| `dynarry[type:n]` | 动态数组   | `dynarry[int8_t:6] numbers = {1, 2, 3, 4, 5, 6};` |
-
----
-
-### 11. **成员的结构**
-
-| 语法           | 描述            | 示例                                                      |
-| ------------ | ------------- | ------------------------------------------------------- |
-| `structof()` | 通过成员地址推断结构体地址 | `void struct Point pPtr = structof(yPtr, struct Point, y);` |
-
----
-
-### 12. **函数定义**
-
-| 语法     | 描述   | 示例                                                         |
-| ------ | ---- | ---------------------------------------------------------- |
-| `func` | 定义函数 | `func int32_t add(int32_t a, int32_t b) { return a + b; }` |
-
----
-
-### 13. **控制流**
-
-| 语法            | 描述    | 示例                                     |
-| ------------- | ----- | -------------------------------------- |
-| `if`          | 条件语句  | `if (a > b) { ... }`                   |
-| `else`        | 条件语句  | `else { ... }`                         |
-| `for`         | 循环语句  | `for (int i = 0; i < 10; i++) { ... }` |
-| `while`       | 循环语句  | `while (a > 0) { ... }`                |
-| `do {} while` | 循环语句  | `do { ... } while (a > 0);`            |
-| `switch`      | 多分支语句 | `switch (value) { case 1: ... }`       |
-
----
-
-### 14. **常量定义**
-
-| 语法                    | 描述      | 示例                                                     |
-| --------------------- | ------- | ------------------------------------------------------ |
-| `const`               | 定义常量    | `const int32_t MAX_VALUE = 100;`                       |
-| `const string`        | 定义字符串常量 | `const string GREETING = "Hello";`                     |
-| `const` 不指明类型         | 直接字符替换  | `const MAX = 100;`                                     |
-| `const` 使用 `##` 拼接变量名 | 拼接变量名   | `const VAR_PJ(varname1, varname2) varname1##varname2;` |
-| `const` 使用 `#` 变量名字符化 | 变量名字符化  | `const VAR_TO_STRING(var) #var;`                       |
-
----
-
-### 15. **内联函数**
-
-| 语法                    | 描述            | 示例                                                                       |
-| --------------------- | ------------- | ------------------------------------------------------------------------ |
-| `inline`              | 定义内联函数        | `inline int32_t ADD(int32_t A, int32_t B) { return A + B; }`             |
-| `inline FUNC(x, n)`   | 不指明类型的参数      | `inline FUNC(x, n) { return x * n; }`                                    |
-| `inline FUNC(...)`    | 多参数传递         | `inline FUNC(...) { printf(__VA_ARGS__); }`                              |
-| `inline FUNC(x, ...)` | 结合不指明类型和多参数传递 | `inline FUNC(x, ...) { printf("Value: %d\n", x); printf(__VA_ARGS__); }` |
-
----
-
-### 16. **可变参数处理**
-
-| 语法              | 描述         | 示例                                     |
-| --------------- | ---------- | -------------------------------------- |
-| `va_with {}`    | 定义可变参数的作用域 | `va_with (myArgs) { ... }`             |
-| `as(type, ptr)` | 转换指针类型并解引用 | `int32_t value = as(int32_t, myArgs);` |
-
----
-
-### 17. **变量名字符化与字符拼接**
-
-| 语法   | 描述     | 示例             |
-| ---- | ------ | -------------- |
-| `#`  | 变量名字符化 | `#var`         |
-| `##` | 字符拼接   | `var1 ## var2` |
-
----
-
-### 18. **其他语法**
-
-| 语法         | 描述   | 示例           |
-| ---------- | ---- | ------------ |
-| `return`   | 返回值  | `return 42;` |
-| `break`    | 跳出循环 | `break;`     |
-| `continue` | 继续循环 | `continue;`  |
-
----
-
-## 最终示例代码
-
-```c
-#include <stdio.h>
-
-// 定义类型别名
-typedef int32_t myInt;
-
-// 定义常量
-const int32_t MAX_VALUE = 100;
-const float32_t PI = 3.14f;
-const string GREETING = "Hello, VoidC!";
-
-// 不指明类型的常量
-const MAX = 100;
-
-// 使用 ## 拼接变量名
-const VAR_PJ(varname1, varname2) varname1##varname2;
-
-// 使用 # 变量名字符化
-const VAR_TO_STRING(var) #var;
-
-// 定义结构体
-struct Point {
-    int32_t x;
-    int32_t y;
-};
-
-// 定义共用体
-union Data {
-    int32_t i;
-    float32_t f;
-};
-
-// 定义枚举类型
-enum Color { RED, GREEN, BLUE };
-
-// 定义模板函数
-template <typename T>
-func void printValue(void ptr) {
-    void T valuePtr = voidof(ptr, T);
-    printf("Value: %d\n", of(valuePtr));
-}
-
-// 定义内联函数
-inline int32_t ADD(int32_t A, int32_t B) {
-    return A + B;
-}
-
-// 不指明类型的参数
-inline FUNC(x, n) {
-    return x * n;
-}
-
-// 多参数传递
-inline PRINT(...) {
-    printf(__VA_ARGS__);
-}
-
-// 结合不指明类型和多参数传递
-inline LOG(x, ...) {
-    printf("Value: %d\n", x);
-    printf(__VA_ARGS__);
-}
-
-// 变量名字符化与字符拼接（仅在 const 和 inline 中使用）
-inline CONCAT(a, b) a ## b
-inline STR(var) #var
-
-// 新增：inline 结合 LOG() 和 # 用法
-inline LOG_VAR(var) {
-    printf("Variable name: %s, Value: %d\n", #var, var);
-}
-
-func int32_t main() {
-    // 基本数据类型
-    int8_t num8 = 42;
-    int16_t num16 = 42;
-    int32_t num32 = 42;
-    int64_t num64 = 42;
-    uint8_t unum8 = 42;
-    uint16_t unum16 = 42;
-    uint32_t unum32 = 42;
-    uint64_t unum64 = 42;
-    float32_t pi32 = 3.14f;
-    float64_t pi64 = 3.14;
-    fixedf32_t fixed32 = 1.5;
-    fixedf64_t fixed64 = 1.5;
-    char ch = 'A';
-    string str = "Hello, VoidC!";
-
-    // 使用常量
-    printf("MAX_VALUE: %d\n", MAX_VALUE);
-    printf("PI: %f\n", PI);
-    printf("Greeting: %s\n", GREETING);
-    printf("MAX: %d\n", MAX);  // 不指明类型的常量
-
-    // 使用 ## 拼接变量名
-    int32_t var1 = 10;
-    int32_t var2 = 20;
-    int32_t VAR_PJ(var, 1) = var1;  // 生成 int32_t var1 = 10;
-    int32_t VAR_PJ(var, 2) = var2;  // 生成 int32_t var2 = 20;
-
-    printf("var1: %d\n", var1);
-    printf("var2: %d\n", var2);
-
-    // 使用 # 变量名字符化
-    printf("var1 name: %s\n", VAR_TO_STRING(var1));  // 输出 "var1"
-    printf("var2 name: %s\n", VAR_TO_STRING(var2));  // 输出 "var2"
-
-    // 使用结构体
-    struct Point p = {10, 20};
-    printf("Point: (%d, %d)\n", p.x, p.y);
-
-    // 使用 structof 推断结构体地址
-    void int32_t yPtr = void(p.y);  // 获取结构体成员的地址
-    void struct Point pPtr = structof(yPtr, struct Point, y);  // 推断结构体地址
-    printf("Point (via structof): (%d, %d)\n", of(pPtr).x, of(pPtr).y);
-
-    // 使用共用体
-    union Data data;
-    data.i = 42;
-    printf("Union Value (int): %d\n", data.i);
-    data.f = 3.14f;
-    printf("Union Value (float): %f\n", data.f);
-
-    // 使用枚举
-    enum Color color = GREEN;
-    switch (color) {
-        case RED:
-            printf("Color: RED\n");
-            break;
-        case GREEN:
-            printf("Color: GREEN\n");
-            break;
-        case BLUE:
-            printf("Color: BLUE\n");
-            break;
-    }
-
-    // 使用数组
-    arry[char:3] greeting = "hi";
-    printf("Greeting: %s\n", greeting);
-
-    // 使用动态数组
-    dynarry[int8_t:6] numbers = {1, 2, 3, 4, 5, 6};
-    for (int i = 0; i < 6; i++) {
-        printf("Number: %d\n", numbers[i]);
-    }
-
-    // 使用指针
-    void int32_t numPtr = void(num32);  // 获取 num32 的地址
-    int32_t value = of(numPtr);  // 解引用指针
-    printf("Value: %d\n", value);
-
-    // 使用 voidof 转换指针类型
-    void int32_t ptr = voidof(numPtr, int32_t);  // 将通用指针转换为 int32_t 指针
-    int32_t value2 = of(ptr);  // 解引用指针
-    printf("Value: %d\n", value2);
-
-    // 使用 as 转换指针类型并解引用
-    int32_t value3 = as(int32_t, numPtr);  // 转换指针类型并解引用
-    printf("Value: %d\n", value3);
-
-    // 动态分配内存
-    void dynamicPtr = alloc(sizeof(int32_t));
-    void int32_t dynamicNumPtr = voidof(dynamicPtr, int32_t);
-    of(dynamicNumPtr) = 100;
-    printf("Dynamic Value: %d\n", of(dynamicNumPtr));
-
-    // 释放内存
-    free(dynamicPtr);
-
-    // 使用模板函数
-    printValue<int32_t>(void(num32));  // 打印 num32 的值
-
-    // 使用内联函数
-    int32_t result = ADD(10, 20);
-    printf("Result: %d\n", result);
-
-    // 使用不指明类型的参数
-    int32_t funcResult = FUNC(10, 2);
-    printf("FUNC Result: %d\n", funcResult);  // 输出 20
-
-    // 使用多参数传递
-    PRINT("Hello, %s! The answer is %d.\n", "VoidC", 42);  // 输出 "Hello, VoidC! The answer is 42."
-
-    // 使用结合不指明类型和多参数传递
-    LOG(10, "Additional info: %s\n", "This is VoidC!");  // 输出 "Value: 10" 和 "Additional info: This is VoidC!"
-
-    // 使用 va_with
-    func printValues(int32_t count, ...) {
-        va_with (myArgs) {
-            for (int i = 0; i < count; i++) {
-                int32_t value = as(int32_t, myArgs);  // 转换指针类型并解引用
-                printf("Value: %d\n", value);
-            }
-        }
-    }
-
-    printValues(3, 10, 20, 30);  // 输出 "Value: 10", "Value: 20", "Value: 30"
-
-    // 使用变量名字符化与字符拼接
-    int32_t var1 = 10;
-    int32_t var2 = 20;
-    int32_t CONCAT(var, 1) = var1;  // 拼接变量名
-    printf("var1: %d\n", var1);
-    printf("var2: %d\n", var2);
-    printf("var1 name: %s\n", STR(var1));  // 变量名字符化
-
-    // 新增：inline 结合 LOG() 和 # 用法
-    int32_t testVar = 123;
-    LOG_VAR(testVar);  // 输出 "Variable name: testVar, Value: 123"
-
-    // 新增：do {} while() 语法
-    int32_t counter = 0;
-    do {
-        printf("Counter: %d\n", counter);
-        counter++;
-    } while (counter < 5);  // 输出 Counter: 0 到 Counter: 4
-
-    return 0;
+# NiHao 编程语言参考手册
+
+## 1. 概述
+
+NiHao 是一种新型静态编译语言，专为系统级编程和高性能应用设计，融合了现代语言特性与底层控制能力。
+
+## 2. 基本语法
+
+### 2.1 注释
+
+```nihao
+// 单行注释
+/* 多行注释 */
+```
+
+### 2.2 语句分隔
+
+- 语句以换行符分隔
+- 多语句同行使用分号分隔：`stmt1; stmt2`
+
+### 2.3 内置函数
+
+- `typeof(type)` 类型判断 返回类型
+- `sizeof(type)` 长度判断 返回长度
+- `holdof(type,member,ptr)` 从属判断 返回成员所有者
+- `visof(var)` 可见性判断 返回可见属性
+
+### 2.4 关键字说明
+
+- `alias` 类型别名
+- `const` 修饰不可变
+- `flow` 修饰动态可见
+- `static` 修饰静态可见
+- `_flow` 动态可见属性枚举值
+- `_static` 静态可见属性枚举值
+- `_undef` 未定义不可见属性枚举值
+- `cooking {...}` 编译期执行代码块关键字
+- `align n {...}` 字节对齐代码块
+- `use` 模块引用
+- `module` 模块定义
+- `link ... with ...` 静态库打包链接
+- `link ... as ...` 静态库导出使用
+
+## 3. 类型系统
+
+### 3.1 基础类型
+
+| 类型       | 描述             | 大小   |
+| -------- | -------------- | ---- |
+| `char`   | 字符类型           | 1字节  |
+| `string` | 字符串类型          | 动态   |
+| `u8`     | 无符号8位整型        | 1字节  |
+| `u16`    | 无符号16位整型       | 2字节  |
+| `u32`    | 无符号32位整型       | 4字节  |
+| `u64`    | 无符号64位整型       | 8字节  |
+| `i8`     | 有符号8位整型        | 1字节  |
+| `i16`    | 有符号16位整型       | 2字节  |
+| `i32`    | 有符号32位整型       | 4字节  |
+| `i64`    | 有符号64位整型       | 8字节  |
+| `f32`    | 单精度浮点          | 4字节  |
+| `f64`    | 双精度浮点          | 8字节  |
+| `fx32`   | 单精度定点数(Q16.16) | 4字节  |
+| `fx64`   | 双精度定点数(Q32.32) | 8字节  |
+| `void`   | 通用指针类型         | 指针大小 |
+
+### 3.2 复合类型
+
+**数组声明：**
+
+```nihao
+fixedArray char[3]       // 固定大小数组
+dynamicArray i8[...]   // 无初始值动态数组
+initArray u16[6...]   // 有初始大小的动态数组
+// 数组访问
+```
+
+**类型别名：**
+
+```nihao
+alias Byte = u8
+alias StringPtr = void[]
+```
+
+**类型定义：**
+
+```nihao
+Person struct{
+    name string
+    age u8
+    flag u8:1 // 支持位域语法
 }
 ```
 
-这就是​**VoidC 语言** 的核心语法与示例代码实现。该语言具备现代、安全且强大的特性，适用于系统编程和复杂数据结构的实现。希望本文档与代码能帮助您更好地理解和使用 ​**VoidC 语言**！
+**共用体：**
 
-若有进一步需求或疑问，欢迎随时交流！💻✨ ​**♥**
+```nihao
+Data union{
+    asInt i32
+    asFloat f32
+}
+```
+
+**枚举：**
+
+```nihao
+Color enum{ RED, GREEN, BLUE }
+```
+
+### 3.3 类型操作
+
+```nihao
+// 类型判断
+if typeof(value) == i32 { ... }
+
+// 类型大小
+size u8 = sizeof(Person)
+
+// 类型对齐
+align 4 {
+  Protocol struct {
+    data u8
+    len u32
+    flag u32:1 
+    tag u32:2
+  }
+}  // 4字节对齐
+```
+
+## 4. 变量声明与可见性
+
+### 4.1 声明修饰符
+
+| 修饰符      | 描述       |
+| -------- | -------- |
+| `const`  | 定义固定可见变量 |
+| `flow`   | 定义动态可见变量 |
+| `static` | 定义静态可见变量 |
+| `无修饰`    | 定义局部可见变量 |
+
+### 4.2 示例
+
+```nihao
+const MAX_SIZE i32 = 1024
+flow counter i8 = 0
+static globalVar f32 = 3.14
+{inferred string = "Hello"}
+```
+
+## 5. 指针与内存管理
+
+### 5.1 指针操作
+
+```nihao
+// 不允许声明空指针，声明时必须赋值
+variable i8 = 0;
+varptr void = &var
+
+// 单级指针
+ptr void = malloc(i32)  // 分配内存
+ptr.(i32) = 42          // 解引用赋值
+
+// 多级指针
+ptr2 void[] = &ptr    // 二级指针定义
+ptr = ptr2.()         // 一层解引用
+variable = ptr2[].(i32)  // 二层解引用
+
+ptr3 void[][] ?= &ptr2    //三级指针定义
+ptr2 = ptr3.()          // 一层解引用
+ptr  = ptr3[].()        // 二层解引用
+variable = ptr3[][].(i32) // 三层解引用
+
+//数组指针
+arry char[9] = {1,2,3,4,5,6,7,8,9}
+arryptr void = &arry    // 获取数组指针
+arryptr.(char[9])[0] = 0       // 对[0]成员解引用
+arryptr.(char[9])[1] = 1       // 对[1]成员解引用
+arryptr.(char[9])[2] = 2       // 对[2]成员解引用
+
+arrybuffer char[8] = arryptr.(char[9])[0..7]
+// arrybuffer == {0,1,2,4,5,6,7,8}
+
+// 数组指针数组
+arryptr2 void[2] = {&arry,&arrybuffer}
+arryptr2[0].(char[9])[8] = arry[8]
+arryptr2[1].(char[8])[7] = arrybuffer[7]
+
+// 指针数组指针
+ptrarry void = &arryptr2
+ptrarry.(void[2])[0].(char[9])[8] = 8
+ptrarry.(void[2])[1].(char[8])[7] = 7
+
+// arry == {0,1,2,4,5,6,7,8,8}
+// arrybuffer == {0,1,2,4,5,6,7,7}
+
+
+// 指针数组
+dptrarry1 void[3] = malloc(void[3]) // 动态分配一维指针数组
+dptrarry1[2] = ptr
+dptrarry1[2].(i32) += 1
+
+dptr3 void[4][5] = malloc(void[4][5]) // 动态分配二维指针数组
+dptr3[3][4] = ptr       // 安全指针传递
+// 错误：dptr3[0][0].(int64) error: int64 type size > i32 type size!
+dptr3[3][4].(i32) += 1  // 多级指针解引用 
+
+// 结构体指针
+Say struct{
+    name char[9]
+    say string
+}
+xiaoming Say 
+stptr void = &xiaoming
+stptr.(char[9])[0..8] = "xiaoming"  // 指针切片赋值
+stptr.(Say).say = "NiHao I am xiaoming!" // 指针类型引用
+talk = xiaoming.say
+puts(talk)
+// puts(talk) out--> "NiHao I am xiaoming!"
+```
+
+### 5.2 内存判断
+
+```nihao
+// 可见性判断
+if visof(ptr) == _static { 
+    // ...
+}
+
+// 从属判断
+boy Person = {"xiaoming", 13}
+ptr void = &boy.name
+if holdof(ptr) == boy { 
+    // ...
+}
+```
+
+## 6. 控制结构
+
+### 6.1 条件语句
+
+```nihao
+if condition {
+    // ...
+} elif anotherCondition {
+    // ...
+} else {
+    // ...
+}
+```
+
+### 6.2 循环结构
+
+**do 循环：**
+
+```nihao
+do value > 0 {
+    value++
+    if value == 100 {
+        break
+    }
+    elif value == 50{
+      continue
+    }
+}
+```
+
+**while 循环（带模式匹配）：**
+
+```nihao
+var1 u8
+while var1 += 1 {
+    is -1 {
+        break
+    }
+    is 0..50 {
+        continue
+    }
+    break
+}
+```
+
+**for 循环：**
+
+```nihao
+for i = 0; i < 10; i++ {
+    // ...
+}
+```
+
+## 7. 函数定义
+
+### 7.1 函数声明
+
+```nihao
+// 无返回无参函数
+func greet() {
+    print("Hello")
+}
+
+// 有返回有参函数
+func add(a i8, b i8) i8 {
+    return a + b
+}
+
+// 多返回值函数
+func swap(a i8, b i8) (i8, i8) {
+    return b, a
+}
+```
+
+## 8. 模块系统
+
+### 8.1 模块定义
+
+```nihao
+module mathUtils
+
+func add(a i32, b i32) i32 {
+    return a + b
+}
+```
+
+### 8.2 模块使用
+
+```nihao
+use mathUtils
+```
+
+### 8.3 库链接
+
+```nihao
+link "libc.so" as libc
+```
+
+### 8.4 库封装
+
+```nihao
+// 封装共享sdl库
+link "libsdl.so" with sdl
+
+// 封装静态http库 
+link "libhttp.a" with {
+    http_server,
+    http_client
+}
+```
+
+## 9. 编译指令
+
+### 9.1 常用命令
+
+```bash
+nihao init     # 初始化项目
+nihao build    # 构建项目
+nihao run      # 构建并运行
+nihao debug    # 调试模式构建
+```
+
+### 9.2 编译期执行
+
+```nihao
+cooking {
+    // 编译期执行的代码
+    const BUILD_TIME = time.now()
+}
+```
+
+## 10. 示例程序
+
+```nihao
+module main
+use stdio
+use stdlib
+link "libhttp.so" as http
+
+alias http_client = http.http_client
+alias time = stdlib.time
+
+const ConstValue i8 = 100
+
+func main() {
+    puts("程序启动\n")
+
+    // 动态内存分配
+    flow dynptr void = malloc(i32)
+
+    // 指针操作
+    dynptr.(i32) = ConstValue
+    dynptr.free()
+
+    // 数组操作
+    arry f32[3] = {1.1, 1.2, 1.3}
+    ptrarry void[3] = {&arry[0], &arry[1], &arry[2]}
+
+    // 可见性判断
+    if visof(staticptr) == _static {
+        flow temp void = malloc(float32)
+    }
+
+    if visof(dynptr) == _flow {
+        puts("the ptr is _flow attribute \n");
+    }
+
+    // 多返回值处理
+    (x, y) i8 = calculate()
+}
+
+func calculate() (i8, i8) {
+    if visof(value) != _undef 
+    {
+      return 0,0
+    }
+    elif visof(ConstValue) == _static
+    {
+      return ConstValue, (ConstValue*2)
+    }
+}
+```
+
+## 11. 高级特性
+
+### 11.1 类型安全
+
+```nihao
+// 安全的指针传递
+flow safePtr void ?= ptr
+
+// 等价于
+if visof(ptr) == _flow {
+    safePtr = ptr
+}
+```
+
+## 12.NiHao语言可见性系统与生命周期管理
+
+根据变量属性划分可见属性
+
+![](file://D:\learnspace\gitlink\nihao\Visibility definition.png?msec=1767578187385)
+
+### 12.1 存储期和作用域的组合规则
+
+```nihao
+// 存储期和作用域规则
+const MAX_SIZE i32 = 1024     // 静态存储期，全局作用域
+static counter i32 = 0        // 静态存储期，模块作用域  
+flow dynamic_var i32 = 42     // 动态存储期，动态作用域
+
+// 局部代码块
+{
+    local_var i32 = 100       // 自动存储期，局部作用域
+}
+
+// 指针安全传递规则
+func safe_pointer_operations() {
+    // 安全传递：同作用域或更长寿作用域
+    flow ptr1 void = &dynamic_var     // 安全：flow -> flow
+    static ptr2 void = &MAX_SIZE      // 安全：const -> static
+
+    // 不安全传递：短寿作用域向长寿作用域传递
+    // static ptr3 void = &local_var   // 错误：局部变量不能传递给静态指针
+    // const ptr4 void = &dynamic_var  // 错误：flow不能传递给const
+}
+```
+
+### 12.2 可见性检查的安全传递
+
+```nihao
+// 安全指针赋值操作符 ?= 的可见性检查规则
+func visibility_checks() {
+    source_ptr void = &some_variable
+    target_ptr void
+
+    // 安全赋值：检查可见性兼容性
+    target_ptr ?= source_ptr  // 等价于以下检查：
+
+    // 编译时生成的检查逻辑
+    if visof(source_ptr) == _flow && visof(target_ptr) == _flow {
+        target_ptr = source_ptr  // flow -> flow 安全
+    }
+    elif visof(source_ptr) == _static && visof(target_ptr) == _flow {
+        target_ptr = source_ptr  // static -> flow 安全
+    }
+    elif visof(source_ptr) == _static && visof(target_ptr) == _static {
+        target_ptr = source_ptr  // static -> static 安全
+    }
+    elif visof(source_ptr) == _const && visof(target_ptr) == _static {
+        target_ptr = source_ptr  // const -> static 安全
+    }
+    elif visof(source_ptr) == _const && visof(target_ptr) == _const {
+        target_ptr = source_ptr  // const -> const 安全
+    }
+    else {
+        panic("可见性不兼容的指针赋值")
+    }
+}
+```
+
+## 13. 基于可见性的指针安全系统
+
+### 13.1 指针传递的可见性规则表
+
+```nihao
+// 指针赋值可见性兼容矩阵
+// 源 -> 目标    const    static    flow    局部
+// const         安全      安全      安全    错误
+// static        错误      安全      安全    错误  
+// flow          错误      错误      安全    错误
+// 局部          错误      错误      安全    安全
+
+func demonstrate_rules() {
+    const GLOBAL i32 = 100
+    static MODULE_VAR i32 = 200
+    flow DYNAMIC_VAR i32 = 300
+    LOCAL_VAR i32 = 400
+
+    // 安全示例
+    flow ptr1 void ?= &DYNAMIC_VAR     // flow -> flow: 安全
+    static ptr2 void ?= &GLOBAL        // const -> static: 安全
+    flow ptr3 void ?= &MODULE_VAR      // static -> flow: 安全
+    flow ptr4 void ?= &LOCAL_VAR       // 局部 -> flow: 安全（同函数内）
+
+    // 错误示例（编译时检查）
+    // static ptr5 void ?= &DYNAMIC_VAR  // flow -> static: 错误
+    // const ptr6 void ?= &MODULE_VAR    // static -> const: 错误
+    // static ptr7 void ?= &LOCAL_VAR    // 局部 -> static: 错误
+}
+```
+
+### 13.2 函数参数的可见性约束
+
+```nihao
+// 函数参数的可见性注解
+func process_static_data(static ptr void) i32 {
+    // 只能接受static或const指针
+    return ptr.(i32)
+}
+
+func process_dynamic_data(flow ptr void) i32 {
+    // 可以接受flow、static、const指针
+    return ptr.(i32)
+}
+
+// 返回值的可见性约束
+func get_static_pointer() static void {
+    static data i32 = 42
+    return &data  // 返回static指针
+}
+
+func get_dynamic_pointer() flow void {
+    flow data i32 = 42
+    return &data  // 返回flow指针
+}
+
+func example_usage() {
+    static static_ptr void = get_static_pointer()
+    flow dynamic_ptr void = get_dynamic_pointer()
+
+    // 安全调用
+    process_static_data(static_ptr)     // static -> static: 安全
+    process_dynamic_data(dynamic_ptr)  // flow -> flow: 安全
+    process_dynamic_data(static_ptr)   // static -> flow: 安全
+}
+```
+
+## 14. 动态作用域的生命周期管理
+
+### 14.1 flow变量的作用域推导
+
+```nihao
+// 编译器自动推导flow变量的作用域
+func scope_demonstration() {
+    flow var1 i32 = 10
+
+    if condition {
+        flow var2 i32 = 20
+        flow ptr1 void ?= &var1     // 安全：var1作用域包含var2
+        flow ptr2 void ?= &var2     // 安全：同作用域
+
+        // var2的作用域在此结束
+    }
+
+    // 这里不能再使用ptr2，因为var2已离开作用域
+    flow ptr3 void ?= &var1         // 安全：var1仍然在作用域内
+}
+
+// 嵌套作用域的生命周期检查
+func nested_scopes() {
+    flow outer_var i32 = 100
+
+    {
+        flow inner_var i32 = 200
+        flow inner_ptr void ?= &outer_var  // 安全：外部作用域包含内部
+        flow outer_ptr void ?= &inner_var  // 安全：同函数作用域
+    }
+
+    // 离开内部作用域后，inner_var失效
+    // 但outer_var仍然有效
+}
+```
+
+### 14.2 跨函数调用的作用域管理
+
+```nihao
+// 函数调用时的作用域传递
+func caller_function() {
+    flow local_dynamic i32 = 42
+    flow result i32 = process_with_callback(local_dynamic, &callback_function)
+}
+
+func process_with_callback(flow data i32, 
+                           flow callback func(i32)i32
+                           )flow i32 {
+    // data和callback都是flow，保证生命周期兼容
+    return callback(data)
+}
+
+func callback_function(value i32) i32 {
+    return value * 2
+}
+```
+
+## 15. 安全的指针操作模式
+
+### 15.1 基于可见性的安全解引用
+
+```nihao
+// 安全解引用操作符 ! 的可见性检查
+func safe_dereference_examples() {
+    flow dynamic_ptr void = &some_flow_variable
+    static static_ptr void = &some_static_variable
+
+    // 安全解引用
+    value1 = dynamic_ptr?.(i32)     // flow指针的安全解引用
+    value2 = static_ptr?.(i32)     // static指针的安全解引用
+
+    // 安全解引用等价于
+    if visof(dynamic_ptr) != _undef && dynamic_ptr != null {
+        value1 = dynamic_ptr.(i32)
+    } else {
+        panic("不安全解引用")
+    }
+}
+```
+
+### 15.2 数组和结构体指针的安全访问
+
+```nihao
+// 结构体定义
+Person struct {
+    name string   // 动态字符串
+    age i32   // 静态年龄
+}
+
+flow some_person Person
+dynamic_array u8[10...]
+
+func safe_structure_access() {
+    flow person_ptr void = &some_person
+
+    // 安全访问结构体字段
+    flow   name_ptr void ?= person_ptr.(Person).name  // flow字段安全传递
+    static age_ptr  void ?= person_ptr.(Person).age   // static字段安全传递
+
+    // 数组边界检查与可见性结合
+    flow array_ptr void = &dynamic_array
+
+    //
+    element = array_ptr!.(i32[10])
+    /* 等价于
+        if visof(array_ptr) == _flow && sizeof(dynamic_array) >= 10 
+        {
+            element = array_ptr.(i32[10])[5]
+        }
+    */
+}
+```
+
+## 16. 错误处理和调试支持
+
+### 16.1 可见性错误诊断
+
+```nihao
+// 详细的可见性错误信息
+func demonstrate_visibility_errors() {
+    flow dynamic_var i32 = 42
+    static static_var i32 = 100
+
+    // 触发可见性错误时的诊断信息
+    static error_ptr void ?= &dynamic_var  
+    // 编译错误：无法将flow可见性(_flow)赋值给static可见性(_static)
+    // 原因：static指针可能比flow变量寿命更长，导致悬垂指针
+}
+
+// 运行时可见性检查
+func runtime_visibility_check(ptr void) {
+
+    while visof(ptr) {
+        is _const => puts("常量指针，全局生命周期")
+        is _static => puts("静态指针，模块生命周期") 
+        is _flow => puts("动态指针，需要作用域分析")
+        is _undef => puts("未定义或无效指针")
+        break
+    }
+}
+```
+
+### 16.2 作用域调试工具
+
+```nihao
+// 编译时作用域分析报告
+func analyzed_function() {
+    flow var1 i32 = 10        // [作用域: 函数级]
+    {
+        flow var2 i32 = 20    // [作用域: 未确定]
+        var3 i32 = 30    // [作用域: 块级]
+    }
+    // [警告: var2, var3 离开作用域]
+
+    /* [警告:var2 作用域变更]
+        func {
+            {---------------scope start
+
+            }---------------scope end old
+
+        }-------------------scope end new
+
+    */
+    var4 i32 = var2; 
+    // [编译错误: var3 离开作用域 --> 未定义]
+    var4 = var3;
+
+    // [警告: tracked_var 作用域变更]
+    flow ptrvar1 void = scope_tracing_example()
+
+    // [编译错误: tracked_var 只能传递给 flow 变量]
+    ptrvar2 void = scope_tracing_example()
+}
+
+func scope_tracing_example() flow i32{
+    flow tracked_var i32 = 42
+
+    return &tracked_var  // 启用作用域追踪
+    // 在调试模式下记录作用域进入/离开
+}
+```
+
+## 17. 实际应用示例
+
+### 17.1 完整的模块示例
+
+```nihao
+module security_module
+
+// 模块级静态数据
+static module_counter i32 = 0
+const MAX_CONNECTIONS i32 = 1000
+
+// 安全的数据处理器
+SecurityProcessor struct {
+    config static ConfigData
+    state flow ProcessorState
+}
+
+
+func process_request(flow self SecurityProcessor, flow request Request) flow Response {
+    // 安全的状态访问
+    self.state.current_request ?= request
+
+    // 静态配置访问
+    if self.state.connection_count < self.config.(ConfigData).max_connections {
+        self.state.connection_count++
+        return create_response(200, "OK")
+    }
+
+    return create_response(429, "Too Many Requests")
+}
+
+func main() {
+    flow processor SecurityProcessor = create_processor()
+    flow request Request = receive_request()
+
+    // 安全的方法调用
+    flow response Response = processor.process_request(request)
+    send_response(response)
+}
+```
+
+### 17.2 内存安全模式
+
+```nihao
+// 基于可见性的内存安全模式
+func memory_safe_patterns() {
+    // 模式1：动态数据在封闭作用域内处理
+    {
+        flow temporary_data Data = load_temporary_data()
+        process_data(temporary_data)  // 数据在处理完成后自动清理
+    }
+
+    // 模式2：静态数据长期持有
+    static persistent_cache Cache = initialize_cache()
+    use_cache(persistent_cache)
+
+    // 模式3：安全的数据传递链
+    flow source_data Data = acquire_data()
+    flow processed_data Data = transform_data(source_data)
+    flow result Result = analyze_data(processed_data)
+    // 所有flow数据在函数结束时自动清理
+}
+```
+
+## 总结
+
+这个设计基于NiHao语言现有的可见性系统，通过以下方式实现内存安全：
+
+1. 1.
+   
+   **明确的存储期和作用域**：const/static/flow/局部变量的生命周期规则清晰
+
+2. 2.
+   
+   **可见性检查的指针安全**：通过`?=`操作符在赋值时检查可见性兼容性
+
+3. 3.
+   
+   **动态作用域管理**：flow变量的作用域由编译器自动推导
+
+4. 4.
+   
+   **渐进式安全**：从局部安全到模块安全，最后到全局安全
+
+关键优势：
+
+- 不引入复杂的所有权系统
+
+- 利用现有的可见性修饰符
+
+- 编译时和运行时结合的安全检查
+
+- 与NiHao语言设计哲学高度一致
+
+这样既保持了语言的简洁性，又提供了强大的内存安全保障。
+
+---
+
+*NiHao v1.0 语言规范 - © 2025 NiHao 开发团队*

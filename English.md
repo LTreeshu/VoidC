@@ -1,9 +1,8 @@
 ## VoidC Language Final Syntax Table
+
 ---
 
-
 ### 1. **Basic Data Types**
-
 
 | Type         | Description                   | Example                 |
 | ------------ | ----------------------------- | ----------------------- |
@@ -108,8 +107,8 @@
 
 ### 11. **Member Structure**
 
-| Syntax       | Description                                 | Example                                                 |
-| ------------ | ------------------------------------------- | ------------------------------------------------------- |
+| Syntax       | Description                                 | Example                                                     |
+| ------------ | ------------------------------------------- | ----------------------------------------------------------- |
 | `structof()` | Infer structure address from member address | `void struct Point pPtr = structof(yPtr, struct Point, y);` |
 
 ---
