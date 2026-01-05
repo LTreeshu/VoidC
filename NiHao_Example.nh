@@ -1,0 +1,47 @@
+module main
+use stdio
+use stdlib
+link "libhttp.so" as http
+
+alias http_client = http.http_client
+alias time = stdlib.time
+
+const ConstValue i8 = 100
+
+func main() {
+    puts("程序启动\n")
+
+    // 动态内存分配
+    flow dynptr void = malloc(i32)
+
+    // 指针操作
+    dynptr.(i32) = ConstValue
+    dynptr.free()
+
+    // 数组操作
+    arry f32[3] = {1.1, 1.2, 1.3}
+    ptrarry void[3] = {&arry[0], &arry[1], &arry[2]}
+
+    // 可见性判断
+    if visof(staticptr) == _static {
+        flow temp void = malloc(float32)
+    }
+
+    if visof(dynptr) == _flow {
+        puts("the ptr is _flow attribute \n");
+    }
+
+    // 多返回值处理
+    (x, y) i8 = calculate()
+}
+
+func calculate() (i8, i8) {
+    if visof(value) != _undef 
+    {
+      return 0,0
+    }
+    elif visof(ConstValue) == _static
+    {
+      return ConstValue, (ConstValue*2)
+    }
+}
