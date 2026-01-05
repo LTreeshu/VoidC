@@ -434,7 +434,7 @@ if visof(ptr) == _flow {
 
 根据变量属性划分可见属性
 
-![](Visibility definition.png)
+![Visibility definition.png](Visibility%20definition.png)
 
 ### 12.1 存储期和作用域的组合规则
 
@@ -842,4 +842,5 @@ func memory_safe_patterns() {
 ---
 
 *NiHao v1.0 语言规范 - © 2025 NiHao 开发团队*
+
 
