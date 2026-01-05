@@ -449,7 +449,7 @@ if visof(ptr) == _flow {
 ## 12. NiHao Language Visibility System and Lifetime Management
 
 Variable attributes determine visibility attributes
-![](./Visibility definition en.png?msec=1767579251454)
+![]([./Visibility definition en.png?msec=1767579251454](https://github.com/LTreeshu/VoidC/blob/main/Visibility%20definition%20en.png))
 
 ### 12.1 Storage Duration and Scope Combination Rules
 
@@ -849,4 +849,5 @@ This maintains language simplicity while providing powerful memory safety guaran
 ---
 
 *NiHao v1.0 Language Specification - © 2025 NiHao Development Team*
+
 
