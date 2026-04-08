@@ -8,7 +8,15 @@ alias time = stdlib.time
 
 const ConstValue i8 = 100
 
-func main() {
+multireturn struct{
+    value1 u8
+    value u8
+}
+
+multireturn MultiRuturn = {0}
+
+const main() 
+{
     puts("程序启动\n")
 
     // 动态内存分配
@@ -32,16 +40,17 @@ func main() {
     }
 
     // 多返回值处理
-    (x, y) i8 = calculate()
+    returnValue multireturn = calculate()
 }
 
-func calculate() (i8, i8) {
+const calculate() multireturn 
+{
     if visof(value) != _undef 
     {
       return 0,0
     }
     elif visof(ConstValue) == _static
     {
-      return ConstValue, (ConstValue*2)
+      return {ConstValue, (ConstValue*2)}
     }
 }

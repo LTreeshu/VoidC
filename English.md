@@ -166,31 +166,38 @@ static globalVar f32 = 3.14
 
 ### 5.1 Pointer Operations
 
-```
-// Null pointers not allowed, must be assigned at declaration
+###### 5.1.1 Pointer Definition
+
+```nihao
+// Declaring a null pointer is not allowed; it must be assigned at declaration.
 variable i8 = 0;
 varptr void = &var
 
 // Single-level pointer
-ptr void = malloc(i32)  // Allocate memory
-ptr.(i32) = 42          // Dereference assignment
+ptr void = malloc(i32)   // Allocate memory
+ptr.(i32) = 42           // Dereference and assign
 
 // Multi-level pointers
-ptr2 void[] = &ptr    // Second-level pointer definition
-ptr = ptr2.()         // One-level dereference
+ptr2 void[] = &ptr       // Define a second-level pointer
+ptr = ptr2.()            // One-level dereference
 variable = ptr2[].(i32)  // Two-level dereference
 
-ptr3 void[][] ?= &ptr2    // Third-level pointer definition
-ptr2 = ptr3.()          // One-level dereference
-ptr  = ptr3[].()        // Two-level dereference
+ptr3 void[][] ?= &ptr2    // Define a third-level pointer
+ptr2 = ptr3.()            // One-level dereference
+ptr  = ptr3[].()          // Two-level dereference
 variable = ptr3[][].(i32) // Three-level dereference
+```
 
-// Array pointers
+###### 5.1.2 Array Pointer
+
+```nihao
 arry char[9] = {1,2,3,4,5,6,7,8,9}
-arryptr void = &arry    // Get array pointer
-arryptr.(char[9])[0] = 0       // Dereference [0] member
-arryptr.(char[9])[1] = 1       // Dereference [1] member
-arryptr.(char[9])[2] = 2       // Dereference [2] member
+arryptr void = &arry           // Obtain the array pointer
+arryptr[0] = 0
+arryptr[9] = 9                 // Undefined behavior
+arryptr.(char[9])[9] = 9       // Compilation error: Out-of-bounds
+arryptr.(char[9])[0] = 0       // Dereference member [0]
+
 
 arrybuffer char[8] = arryptr.(char[9])[0..7]
 // arrybuffer == {0,1,2,4,5,6,7,8}
@@ -199,38 +206,59 @@ arrybuffer char[8] = arryptr.(char[9])[0..7]
 arryptr2 void[2] = {&arry,&arrybuffer}
 arryptr2[0].(char[9])[8] = arry[8]
 arryptr2[1].(char[8])[7] = arrybuffer[7]
+```
 
-// Pointer to array of pointers
+###### 5.1.3 Pointer Array
+
+```nihao
+dptrarry1 void[3] = malloc(void[3]) // Dynamically allocate a 1D pointer array
+dptrarry1[2] = ptr
+dptrarry1[2].(i32) += 1
+
+dptr3 void[4][5] = malloc(void[4][5]) // Dynamically allocate a 2D pointer array
+dptr3[3][4] = ptr       // Safe pointer assignment
+// Error: dptr3[0][0].(int64) error: int64 type size > i32 type size!
+dptr3[3][4].(i32) += 1  // Multi-level pointer dereference
+
+// Pointer to pointer array
 ptrarry void = &arryptr2
 ptrarry.(void[2])[0].(char[9])[8] = 8
 ptrarry.(void[2])[1].(char[8])[7] = 7
 
 // arry == {0,1,2,4,5,6,7,8,8}
 // arrybuffer == {0,1,2,4,5,6,7,7}
+```
 
+###### 5.1.4 Composite Type Pointer
 
-// Pointer arrays
-dptrarry1 void[3] = malloc(void[3]) // Dynamically allocate 1D pointer array
-dptrarry1[2] = ptr
-dptrarry1[2].(i32) += 1
-
-dptr3 void[4][5] = malloc(void[4][5]) // Dynamically allocate 2D pointer array
-dptr3[3][4] = ptr       // Safe pointer transfer
-// Error: dptr3[0][0].(int64) error: int64 type size > i32 type size!
-dptr3[3][4].(i32) += 1  // Multi-level pointer dereference 
-
-// Structure pointers
+```nihao
 Say struct{
     name char[9]
     say string
 }
-xiaoming Say 
+xiaoming Say
 stptr void = &xiaoming
 stptr.(char[9])[0..8] = "xiaoming"  // Pointer slice assignment
-stptr.(Say).say = "NiHao I am xiaoming!" // Pointer type reference
+stptr.(Say).say = "NiHao I am xiaoming!" // Pointer type dereference
 talk = xiaoming.say
 puts(talk)
 // puts(talk) out--> "NiHao I am xiaoming!"
+```
+
+###### 5.1.5 Function Pointer
+
+```nihao
+const callback_handle(argc u16) {
+    puts("callback call!")
+}
+
+static callback void(u16) = callback_handle
+
+const callback_register(callback void(u16), event u32) u32 {
+    if event == 1 {
+        static callback void(u16) = callback
+    }
+}
 ```
 
 ### 5.2 Memory Checking
@@ -308,17 +336,17 @@ for i = 0; i < 10; i++ {
 
 ```
 // Function with no return and no parameters
-func greet() {
+const greet() {
     print("Hello")
 }
 
 // Function with return and parameters
-func add(a i8, b i8) i8 {
+const add(a i8, b i8) i8 {
     return a + b
 }
 
 // Function with multiple returns
-func swap(a i8, b i8) (i8, i8) {
+const swap(a i8, b i8) (i8, i8) {
     return b, a
 }
 ```
@@ -330,7 +358,7 @@ func swap(a i8, b i8) (i8, i8) {
 ```
 module mathUtils
 
-func add(a i32, b i32) i32 {
+const add(a i32, b i32) i32 {
     return a + b
 }
 ```
@@ -393,7 +421,7 @@ alias time = stdlib.time
 
 const ConstValue i8 = 100
 
-func main() {
+const main() {
     puts("Program starting\n")
 
     // Dynamic memory allocation
@@ -420,7 +448,7 @@ func main() {
     (x, y) i8 = calculate()
 }
 
-func calculate() (i8, i8) {
+const calculate() (i8, i8) {
     if visof(value) != _undef 
     {
       return 0,0
@@ -465,7 +493,7 @@ flow dynamic_var i32 = 42     // Dynamic storage duration, dynamic scope
 }
 
 // Pointer safety transfer rules
-func safe_pointer_operations() {
+const safe_pointer_operations() {
     // Safe transfer: same scope or longer-lived scope
     flow ptr1 void = &dynamic_var     // Safe: flow -> flow
     static ptr2 void = &MAX_SIZE      // Safe: const -> static
@@ -480,7 +508,7 @@ func safe_pointer_operations() {
 
 ```
 // Visibility check rules for safe pointer assignment operator ?=
-func visibility_checks() {
+const visibility_checks() {
     source_ptr void = &some_variable
     target_ptr void
 
@@ -521,7 +549,7 @@ func visibility_checks() {
 // flow          Error     Error     Safe    Error
 // local         Error     Error     Safe    Safe
 
-func demonstrate_rules() {
+const demonstrate_rules() {
     const GLOBAL i32 = 100
     static MODULE_VAR i32 = 200
     flow DYNAMIC_VAR i32 = 300
@@ -544,28 +572,28 @@ func demonstrate_rules() {
 
 ```
 // Function parameter visibility annotations
-func process_static_data(static ptr void) i32 {
+const process_static_data(static ptr void) i32 {
     // Can only accept static or const pointers
     return ptr.(i32)
 }
 
-func process_dynamic_data(flow ptr void) i32 {
+const process_dynamic_data(flow ptr void) i32 {
     // Can accept flow, static, const pointers
     return ptr.(i32)
 }
 
 // Return value visibility constraints
-func get_static_pointer() static void {
+const get_static_pointer() static void {
     static data i32 = 42
     return &data  // Return static pointer
 }
 
-func get_dynamic_pointer() flow void {
+const get_dynamic_pointer() flow void {
     flow data i32 = 42
     return &data  // Return flow pointer
 }
 
-func example_usage() {
+const example_usage() {
     static static_ptr void = get_static_pointer()
     flow dynamic_ptr void = get_dynamic_pointer()
 
@@ -582,7 +610,7 @@ func example_usage() {
 
 ```
 // Compiler automatically infers flow variable scope
-func scope_demonstration() {
+const scope_demonstration() {
     flow var1 i32 = 10
 
     if condition {
@@ -598,7 +626,7 @@ func scope_demonstration() {
 }
 
 // Nested scope lifetime checking
-func nested_scopes() {
+const nested_scopes() {
     flow outer_var i32 = 100
 
     {
@@ -616,19 +644,19 @@ func nested_scopes() {
 
 ```
 // Scope transfer during function calls
-func caller_function() {
+const caller_function() {
     flow local_dynamic i32 = 42
     flow result i32 = process_with_callback(local_dynamic, &callback_function)
 }
 
-func process_with_callback(flow data i32, 
-                           flow callback func(i32)i32
+const process_with_callback(flow data i32, 
+                           flow callback void(i32)i32
                            )flow i32 {
     // Both data and callback are flow, ensuring lifetime compatibility
     return callback(data)
 }
 
-func callback_function(value i32) i32 {
+const callback_function(value i32) i32 {
     return value * 2
 }
 ```
@@ -639,7 +667,7 @@ func callback_function(value i32) i32 {
 
 ```
 // Visibility check for safe dereference operator !
-func safe_dereference_examples() {
+const safe_dereference_examples() {
     flow dynamic_ptr void = &some_flow_variable
     static static_ptr void = &some_static_variable
 
@@ -668,7 +696,7 @@ Person struct {
 flow some_person Person
 dynamic_array u8[10...]
 
-func safe_structure_access() {
+const safe_structure_access() {
     flow person_ptr void = &some_person
 
     // Safe access to structure fields
@@ -695,7 +723,7 @@ func safe_structure_access() {
 
 ```
 // Detailed visibility error information
-func demonstrate_visibility_errors() {
+const demonstrate_visibility_errors() {
     flow dynamic_var i32 = 42
     static static_var i32 = 100
 
@@ -706,7 +734,7 @@ func demonstrate_visibility_errors() {
 }
 
 // Runtime visibility checking
-func runtime_visibility_check(ptr void) {
+const runtime_visibility_check(ptr void) {
 
     while visof(ptr) {
         is _const => puts("Constant pointer, global lifetime")
@@ -722,7 +750,7 @@ func runtime_visibility_check(ptr void) {
 
 ```
 // Compile-time scope analysis report
-func analyzed_function() {
+const analyzed_function() {
     flow var1 i32 = 10        // [Scope: Function level]
     {
         flow var2 i32 = 20    // [Scope: Undetermined]
@@ -731,7 +759,7 @@ func analyzed_function() {
     // [Warning: var2, var3 leaving scope]
 
     /* [Warning: var2 scope change]
-        func {
+        function {
             {---------------scope start
 
             }---------------scope end old
@@ -750,7 +778,7 @@ func analyzed_function() {
     ptrvar2 void = scope_tracing_example()
 }
 
-func scope_tracing_example() flow i32{
+const scope_tracing_example() flow i32{
     flow tracked_var i32 = 42
 
     return &tracked_var  // Enable scope tracing
@@ -776,7 +804,7 @@ SecurityProcessor struct {
 }
 
 
-func process_request(flow self SecurityProcessor, flow request Request) flow Response {
+const process_request(flow self SecurityProcessor, flow request Request) flow Response {
     // Secure state access
     self.state.current_request ?= request
 
@@ -789,7 +817,7 @@ func process_request(flow self SecurityProcessor, flow request Request) flow Res
     return create_response(429, "Too Many Requests")
 }
 
-func main() {
+const main() {
     flow processor SecurityProcessor = create_processor()
     flow request Request = receive_request()
 
@@ -803,7 +831,7 @@ func main() {
 
 ```
 // Visibility-based memory safety patterns
-func memory_safe_patterns() {
+const memory_safe_patterns() {
     // Pattern 1: Dynamic data processed within enclosed scope
     {
         flow temporary_data Data = load_temporary_data()
