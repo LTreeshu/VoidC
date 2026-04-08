@@ -450,7 +450,6 @@ const main() {
     }
 
     // Multiple return value handling
-    returnValue multireturn = calculate()
 }
 
 const calculate() multireturn  {
