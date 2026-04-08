@@ -261,6 +261,23 @@ talk = xiaoming.say
 puts(talk)
 // puts(talk) out--> "NiHao I am xiaoming!"
 ```
+###### 5.1.5 函数指针
+
+```nihao
+const callback_handle(argc u16) {
+    puts("callback call!")
+} 
+
+static callback void(u16) = callback_handle
+
+const callback_register(callback void(u16), event u32) u32 {
+    if event == 1 {
+        static callback void(u16) = callback
+    }
+}
+
+
+```
 
 ### 5.2 内存判断
 
@@ -337,17 +354,17 @@ for i = 0; i < 10; i++ {
 
 ```nihao
 // 无返回无参函数
-func greet() {
+const greet() {
     print("Hello")
 }
 
 // 有返回有参函数
-func add(a i8, b i8) i8 {
+const add(a i8, b i8) i8 {
     return a + b
 }
 
 // 多返回值函数
-func swap(a i8, b i8) (i8, i8) {
+const swap(a i8, b i8) (i8, i8) {
     return b, a
 }
 ```
@@ -359,7 +376,7 @@ func swap(a i8, b i8) (i8, i8) {
 ```nihao
 module mathUtils
 
-func add(a i32, b i32) i32 {
+const add(a i32, b i32) i32 {
     return a + b
 }
 ```
@@ -422,7 +439,7 @@ alias time = stdlib.time
 
 const ConstValue i8 = 100
 
-func main() {
+const main() {
     puts("程序启动\n")
 
     // 动态内存分配
@@ -449,7 +466,7 @@ func main() {
     (x, y) i8 = calculate()
 }
 
-func calculate() (i8, i8) {
+const calculate() (i8, i8) {
     if visof(value) != _undef 
     {
       return 0,0
@@ -495,7 +512,7 @@ flow dynamic_var i32 = 42     // 动态存储期，动态作用域
 }
 
 // 指针安全传递规则
-func safe_pointer_operations() {
+const safe_pointer_operations() {
     // 安全传递：同作用域或更长寿作用域
     flow ptr1 void = &dynamic_var     // 安全：flow -> flow
     static ptr2 void = &MAX_SIZE      // 安全：const -> static
@@ -510,7 +527,7 @@ func safe_pointer_operations() {
 
 ```nihao
 // 安全指针赋值操作符 ?= 的可见性检查规则
-func visibility_checks() {
+const visibility_checks() {
     source_ptr void = &some_variable
     target_ptr void
 
@@ -551,7 +568,7 @@ func visibility_checks() {
 // flow          错误      错误      安全    错误
 // 局部          错误      错误      安全    安全
 
-func demonstrate_rules() {
+const demonstrate_rules() {
     const GLOBAL i32 = 100
     static MODULE_VAR i32 = 200
     flow DYNAMIC_VAR i32 = 300
@@ -574,28 +591,28 @@ func demonstrate_rules() {
 
 ```nihao
 // 函数参数的可见性注解
-func process_static_data(static ptr void) i32 {
+const process_static_data(static ptr void) i32 {
     // 只能接受static或const指针
     return ptr.(i32)
 }
 
-func process_dynamic_data(flow ptr void) i32 {
+const process_dynamic_data(flow ptr void) i32 {
     // 可以接受flow、static、const指针
     return ptr.(i32)
 }
 
 // 返回值的可见性约束
-func get_static_pointer() static void {
+const get_static_pointer() static void {
     static data i32 = 42
     return &data  // 返回static指针
 }
 
-func get_dynamic_pointer() flow void {
+const get_dynamic_pointer() flow void {
     flow data i32 = 42
     return &data  // 返回flow指针
 }
 
-func example_usage() {
+const example_usage() {
     static static_ptr void = get_static_pointer()
     flow dynamic_ptr void = get_dynamic_pointer()
 
@@ -612,7 +629,7 @@ func example_usage() {
 
 ```nihao
 // 编译器自动推导flow变量的作用域
-func scope_demonstration() {
+const scope_demonstration() {
     flow var1 i32 = 10
 
     if condition {
@@ -628,7 +645,7 @@ func scope_demonstration() {
 }
 
 // 嵌套作用域的生命周期检查
-func nested_scopes() {
+const nested_scopes() {
     flow outer_var i32 = 100
 
     {
@@ -646,19 +663,19 @@ func nested_scopes() {
 
 ```nihao
 // 函数调用时的作用域传递
-func caller_function() {
+const caller_function() {
     flow local_dynamic i32 = 42
     flow result i32 = process_with_callback(local_dynamic, &callback_function)
 }
 
-func process_with_callback(flow data i32, 
-                           flow callback func(i32)i32
+const process_with_callback(flow data i32, 
+                           flow callback void(i32)i32
                            )flow i32 {
     // data和callback都是flow，保证生命周期兼容
     return callback(data)
 }
 
-func callback_function(value i32) i32 {
+const callback_function(value i32) i32 {
     return value * 2
 }
 ```
@@ -669,7 +686,7 @@ func callback_function(value i32) i32 {
 
 ```nihao
 // 安全解引用操作符 ! 的可见性检查
-func safe_dereference_examples() {
+const safe_dereference_examples() {
     flow dynamic_ptr void = &some_flow_variable
     static static_ptr void = &some_static_variable
 
@@ -698,7 +715,7 @@ Person struct {
 flow some_person Person
 dynamic_array u8[10...]
 
-func safe_structure_access() {
+const safe_structure_access() {
     flow person_ptr void = &some_person
 
     // 安全访问结构体字段
@@ -725,7 +742,7 @@ func safe_structure_access() {
 
 ```nihao
 // 详细的可见性错误信息
-func demonstrate_visibility_errors() {
+const demonstrate_visibility_errors() {
     flow dynamic_var i32 = 42
     static static_var i32 = 100
 
@@ -736,7 +753,7 @@ func demonstrate_visibility_errors() {
 }
 
 // 运行时可见性检查
-func runtime_visibility_check(ptr void) {
+const runtime_visibility_check(ptr void) {
 
     while visof(ptr) {
         is _const => puts("常量指针，全局生命周期")
@@ -752,7 +769,7 @@ func runtime_visibility_check(ptr void) {
 
 ```nihao
 // 编译时作用域分析报告
-func analyzed_function() {
+const analyzed_function() {
     flow var1 i32 = 10        // [作用域: 函数级]
     {
         flow var2 i32 = 20    // [作用域: 未确定]
@@ -761,7 +778,7 @@ func analyzed_function() {
     // [警告: var2, var3 离开作用域]
 
     /* [警告:var2 作用域变更]
-        func {
+        function {
             {---------------scope start
 
             }---------------scope end old
@@ -780,7 +797,7 @@ func analyzed_function() {
     ptrvar2 void = scope_tracing_example()
 }
 
-func scope_tracing_example() flow i32{
+const scope_tracing_example() flow i32{
     flow tracked_var i32 = 42
 
     return &tracked_var  // 启用作用域追踪
@@ -806,7 +823,7 @@ SecurityProcessor struct {
 }
 
 
-func process_request(flow self SecurityProcessor, flow request Request) flow Response {
+const process_request(flow self SecurityProcessor, flow request Request) flow Response {
     // 安全的状态访问
     self.state.current_request ?= request
 
@@ -819,7 +836,7 @@ func process_request(flow self SecurityProcessor, flow request Request) flow Res
     return create_response(429, "Too Many Requests")
 }
 
-func main() {
+const main() {
     flow processor SecurityProcessor = create_processor()
     flow request Request = receive_request()
 
@@ -833,7 +850,7 @@ func main() {
 
 ```nihao
 // 基于可见性的内存安全模式
-func memory_safe_patterns() {
+const memory_safe_patterns() {
     // 模式1：动态数据在封闭作用域内处理
     {
         flow temporary_data Data = load_temporary_data()
