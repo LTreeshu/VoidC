@@ -261,6 +261,7 @@ talk = xiaoming.say
 puts(talk)
 // puts(talk) out--> "NiHao I am xiaoming!"
 ```
+
 ###### 5.1.5 函数指针
 
 ```nihao
@@ -275,8 +276,6 @@ const callback_register(callback void(u16), event u32) u32 {
         static callback void(u16) = callback
     }
 }
-
-
 ```
 
 ### 5.2 内存判断
@@ -515,7 +514,7 @@ flow dynamic_var i32 = 42     // 动态存储期，动态作用域
 const safe_pointer_operations() {
     // 安全传递：同作用域或更长寿作用域
     flow ptr1 void = &dynamic_var     // 安全：flow -> flow
-    static ptr2 void = &MAX_SIZE      // 安全：const -> static
+    static ptr2 void = &counter       // 安全：static -> static
 
     // 不安全传递：短寿作用域向长寿作用域传递
     // static ptr3 void = &local_var   // 错误：局部变量不能传递给静态指针
@@ -538,14 +537,8 @@ const visibility_checks() {
     if visof(source_ptr) == _flow && visof(target_ptr) == _flow {
         target_ptr = source_ptr  // flow -> flow 安全
     }
-    elif visof(source_ptr) == _static && visof(target_ptr) == _flow {
-        target_ptr = source_ptr  // static -> flow 安全
-    }
     elif visof(source_ptr) == _static && visof(target_ptr) == _static {
         target_ptr = source_ptr  // static -> static 安全
-    }
-    elif visof(source_ptr) == _const && visof(target_ptr) == _static {
-        target_ptr = source_ptr  // const -> static 安全
     }
     elif visof(source_ptr) == _const && visof(target_ptr) == _const {
         target_ptr = source_ptr  // const -> const 安全
@@ -562,11 +555,11 @@ const visibility_checks() {
 
 ```nihao
 // 指针赋值可见性兼容矩阵
-// 源 -> 目标    const    static    flow    局部
-// const         安全      安全      安全    错误
-// static        错误      安全      安全    错误  
+// 源 -> 目标    const    static    flow    local
+// const         安全      错误      错误    错误
+// static        安全      安全      错误    错误  
 // flow          错误      错误      安全    错误
-// 局部          错误      错误      安全    安全
+// local         错误      错误      错误    安全
 
 const demonstrate_rules() {
     const GLOBAL i32 = 100
@@ -576,13 +569,10 @@ const demonstrate_rules() {
 
     // 安全示例
     flow ptr1 void ?= &DYNAMIC_VAR     // flow -> flow: 安全
-    static ptr2 void ?= &GLOBAL        // const -> static: 安全
-    flow ptr3 void ?= &MODULE_VAR      // static -> flow: 安全
-    flow ptr4 void ?= &LOCAL_VAR       // 局部 -> flow: 安全（同函数内）
+    const ptr6 void ?= &MODULE_VAR    // static -> const: 安全
 
     // 错误示例（编译时检查）
     // static ptr5 void ?= &DYNAMIC_VAR  // flow -> static: 错误
-    // const ptr6 void ?= &MODULE_VAR    // static -> const: 错误
     // static ptr7 void ?= &LOCAL_VAR    // 局部 -> static: 错误
 }
 ```
@@ -619,7 +609,6 @@ const example_usage() {
     // 安全调用
     process_static_data(static_ptr)     // static -> static: 安全
     process_dynamic_data(dynamic_ptr)  // flow -> flow: 安全
-    process_dynamic_data(static_ptr)   // static -> flow: 安全
 }
 ```
 
