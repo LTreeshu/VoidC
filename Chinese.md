@@ -126,9 +126,9 @@ size u8 = sizeof(Person)
 align 4 {
   Protocol struct {
     data u8
-    len u32
+    len  u32
     flag u32:1 
-    tag u32:2
+    tag  u32:2
   }
 }  // 4字节对齐
 ```
@@ -139,10 +139,10 @@ align 4 {
 // 普通嵌套
 aunion union{
     value u16
-    reg struct{
-        r0 u8
-        r1 u8
-    }
+    reg struct{
+        r0 u8
+        r1 u8
+    }
 }
 aunion.reg.r1 = 1
 
@@ -150,10 +150,10 @@ aunion.reg.r1 = 1
 xunion union{
     value u8
     struct{
-        r0:2 u8
-        r1:2 u8
-        r2:2 u8
-        r3:2 u8
+        r0 u8:2
+        r1 u8:2
+        r2 u8:2
+        r3 u8:2
     }
 }
 xunion.r1 = 1
