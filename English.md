@@ -124,6 +124,8 @@ Color enum{ RED, GREEN, BLUE }
 
 ### 3.3 Type Operations
 
+###### 3.3.1 Type align
+
 ```
 // Type checking
 if typeof(value) == i32 { ... }
@@ -135,11 +137,36 @@ size u8 = sizeof(Person)
 align 4 {
   Protocol struct {
     data u8
-    len u32
+    len  u32
     flag u32:1 
-    tag u32:2
+    tag  u32:2
   }
 }  // 4-byte alignment
+```
+###### 3.3.1 Type nesting
+
+```nihao
+// Normal nesting
+aunion union{
+    value u16
+    reg struct{
+        r0 u8
+        r1 u8
+    }
+}
+aunion.reg.r1 = 1
+
+// Anonymous nesting
+xunion union{
+    value u8
+    struct{
+        r0 u8:2
+        r1 u8:2
+        r2 u8:2
+        r3 u8:2
+    }
+}
+xunion.r1 = 1
 ```
 
 ## 4. Variable Declaration and Visibility
@@ -881,7 +908,3 @@ This maintains language simplicity while providing powerful memory safety guaran
 ---
 
 *NiHao v1.0 Language Specification - © 2025 NiHao Development Team*
-
-
-
-
