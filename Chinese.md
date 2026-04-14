@@ -443,7 +443,8 @@ multireturn struct{
     value u8
 }
 
-const main() {
+const main() 
+{
     puts("Program starting\n")
 
     // Dynamic memory allocation
@@ -468,15 +469,19 @@ const main() {
 
     // Multiple return value handling
     returnValue multireturn = calculate()
+
+    return
+    /* If the flow variable: dynptr, temp, is not returned,
+     * they will be automatically free.
+    */
 }
 
-const calculate() multireturn  {
-    if visof(value) != _undef 
-    {
-      return 0,0
+const calculate() multireturn  
+{
+    if visof(value) != _undef {
+      return {0,0}
     }
-    elif visof(ConstValue) == _static
-    {
+    elif visof(ConstValue) == _static {
       return {ConstValue, (ConstValue*2)}
     }
 }

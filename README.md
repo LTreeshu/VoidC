@@ -52,7 +52,12 @@ const main()
     }
 
     // Multiple return value handling
-    
+    returnValue multireturn = calculate()
+
+    return
+    /* If the flow variable: dynptr, temp, is not returned,
+     * they will be automatically free.
+    */
 }
 
 const calculate() multireturn  
