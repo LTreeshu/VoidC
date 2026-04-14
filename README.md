@@ -27,7 +27,8 @@ multireturn struct{
     value u8
 }
 
-const main() {
+const main() 
+{
     puts("Program starting\n")
 
     // Dynamic memory allocation
@@ -38,7 +39,8 @@ const main() {
 
     // Array operations
     arry f32[3] = {1.1, 1.2, 1.3}
-    ptrarry void[3] = {&arry[0], &arry[1], &arry[2]}
+    ptrarry void[3] = &arry
+    ptrarry2 void[3] = {&arry[2], &arry[1], &arry[0]}
 
     // Visibility checking
     if visof(staticptr) == _static {
@@ -50,15 +52,15 @@ const main() {
     }
 
     // Multiple return value handling
+    
 }
 
-const calculate() multireturn  {
-    if visof(value) != _undef 
-    {
-      return 0,0
+const calculate() multireturn  
+{
+    if visof(value) != _undef {
+      return {0,0}
     }
-    elif visof(ConstValue) == _static
-    {
+    elif visof(ConstValue) == _static {
       return {ConstValue, (ConstValue*2)}
     }
 }

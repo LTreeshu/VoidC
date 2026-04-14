@@ -464,7 +464,8 @@ const main() {
 
     // Array operations
     arry f32[3] = {1.1, 1.2, 1.3}
-    ptrarry void[3] = {&arry[0], &arry[1], &arry[2]}
+    ptrarry void[3] = &arry
+    ptrarry2 void[3] = {&arry[2], &arry[1], &arry[0]}
 
     // Visibility checking
     if visof(staticptr) == _static {
@@ -476,6 +477,7 @@ const main() {
     }
 
     // Multiple return value handling
+    returnValue multireturn = calculate()
 }
 
 const calculate() multireturn  {
