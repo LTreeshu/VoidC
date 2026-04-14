@@ -461,7 +461,6 @@ const main() {
 
     // Pointer operations
     dynptr.(i32) = ConstValue
-    dynptr.free()
 
     // Array operations
     arry f32[3] = {1.1, 1.2, 1.3}

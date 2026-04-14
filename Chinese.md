@@ -438,21 +438,25 @@ alias time = stdlib.time
 
 const ConstValue i8 = 100
 
-const main() {
-    puts("程序启动\n")
+multireturn struct{
+    value1 u8
+    value u8
+}
 
-    // 动态内存分配
+const main() {
+    puts("Program starting\n")
+
+    // Dynamic memory allocation
     flow dynptr void = malloc(i32)
 
-    // 指针操作
+    // Pointer operations
     dynptr.(i32) = ConstValue
-    dynptr.free()
 
-    // 数组操作
+    // Array operations
     arry f32[3] = {1.1, 1.2, 1.3}
     ptrarry void[3] = {&arry[0], &arry[1], &arry[2]}
 
-    // 可见性判断
+    // Visibility checking
     if visof(staticptr) == _static {
         flow temp void = malloc(float32)
     }
@@ -461,18 +465,17 @@ const main() {
         puts("the ptr is _flow attribute \n");
     }
 
-    // 多返回值处理
-    (x, y) i8 = calculate()
+    // Multiple return value handling
 }
 
-const calculate() (i8, i8) {
+const calculate() multireturn  {
     if visof(value) != _undef 
     {
       return 0,0
     }
     elif visof(ConstValue) == _static
     {
-      return ConstValue, (ConstValue*2)
+      return {ConstValue, (ConstValue*2)}
     }
 }
 ```
