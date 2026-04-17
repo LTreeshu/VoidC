@@ -197,7 +197,7 @@ static globalVar f32 = 3.14
 
 ```nihao
 // Declaring a null pointer is not allowed; it must be assigned at declaration.
-variable i8 = 0;
+variable i8 = 0
 varptr void = &var
 
 // Single-level pointer

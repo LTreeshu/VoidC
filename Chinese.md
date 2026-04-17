@@ -187,7 +187,7 @@ static globalVar f32 = 3.14
 
 ```nihao
 // 不允许声明空指针，声明时必须赋值
-variable i8 = 0;
+variable i8 = 0
 varptr void = &var
 
 // 单级指针

@@ -13,6 +13,11 @@ multireturn struct{
     value u8
 }
 
+cooking{
+    const date string = __DATE__
+}
+
+
 const main() 
 {
     puts("Program starting\n")
