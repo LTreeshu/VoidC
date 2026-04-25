@@ -1,7 +1,7 @@
 module main
 use stdio
 use stdlib
-link "libhttp.so" as http
+link "libhttp.so" http
 
 alias http_client = http.http_client
 alias time = stdlib.time
@@ -13,11 +13,6 @@ multireturn struct{
     value u8
 }
 
-cooking{
-    const date string = __DATE__
-}
-
-
 const main() 
 {
     puts("Program starting\n")
@@ -26,12 +21,16 @@ const main()
     flow dynptr void = malloc(i32)
 
     // Pointer operations
-    dynptr.(i32) = ConstValue
+    dynptr.() = ConstValue
+    dynptr.(i8) = ConstValue
 
     // Array operations
     arry f32[3] = {1.1, 1.2, 1.3}
-    ptrarry void[3] = &arry
-    ptrarry2 void[3] = {&arry[2], &arry[1], &arry[0]}
+    ptr void[3] = &arry
+    ptrarry void[3] = {&arry[2], &arry[1], &arry[0]}
+    ptrarry2 void[][3] = &ptrarry
+
+    ptrarry2[][1].() = 2.1
 
     // Visibility checking
     if visof(staticptr) == _static {
@@ -56,7 +55,42 @@ const calculate() multireturn
     if visof(value) != _undef {
       return {0,0}
     }
-    elif visof(ConstValue) == _static {
+    else if visof(ConstValue) == _static {
       return {ConstValue, (ConstValue*2)}
     }
 }
+
+// Inline function definition
+inline add(a int, b int)
+{
+    return (a+b)
+}
+
+// Compile-time definitions
+
+// Compile-time type define 
+cooking arry_i8_t struct {
+    icopy const(size_t, arry_i8_t)
+    arry i8[...]
+}
+
+// Compile-time array copy function definition
+cooking icopy(len size_t, src arry_i8_t){
+    target arry_i8_t = holdof(icopy)
+    target.arry.(struct{_ i8[len]}) = src.arry.(struct{_ i8[len]})
+
+}
+
+// Compile-time maker function definition
+cooking obj_maker(len size_t) struct 
+{
+    return {
+        .icopy = icopy
+        .arry  = i8[len]
+    }
+}
+
+// Assign values at compile time
+cooking PI = 3.1415926
+// Assign values at initialization time
+const DoublePI f64 = PI * 2

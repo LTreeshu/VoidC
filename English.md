@@ -53,9 +53,7 @@ NiHao is a new statically compiled language designed for system-level programmin
 
 - `module` define the current module name
 
-- `link ... with ...` Auxiliary compilation, packaging linked file parameters
-
-- `link ... as ...`Auxiliary compilation, Export extern from linked file
+- `link ...`Auxiliary compilation, Export extern from linked file
 
 ## 3. Type System
 
@@ -279,11 +277,24 @@ const callback_handle(argc u16) {
     puts("callback call!")
 }
 
-static callback void(u16) = callback_handle
+const callback void(u16) = callback_handle
 
-const callback_register(callback void(u16), event u32) u32 {
+const callback_register(const cb void(u16), event u32) u32 {
     if event == 1 {
-        static callback void(u16) = callback
+        callback = cb
+    }
+}
+
+flow callback_handle_with_return(argc u16) i32 {
+    puts("callback call!")
+    return 42
+}
+
+flow callback2 void(u16)i32 = callback_handle_with_return
+
+const callback_register_with_return(flow cb void(u16)i32 , event u32) u32 {
+    if event == 1 {
+        callback2 = cb
     }
 }
 ```
@@ -311,7 +322,7 @@ if holdof(ptr) == boy {
 ```
 if condition {
     // ...
-} elif anotherCondition {
+} else if anotherCondition {
     // ...
 } else {
     // ...
@@ -328,7 +339,7 @@ do value > 0 {
     if value == 100 {
         break
     }
-    elif value == 50{
+    else if value == 50{
       continue
     }
 }
@@ -399,20 +410,7 @@ use mathUtils
 ### 8.3 Library Linking
 
 ```
-link "libc.so" as libc
-```
-
-### 8.4 Library Encapsulation
-
-```
-// Encapsulate shared SDL library
-link "libsdl.so" with sdl
-
-// Encapsulate static HTTP library
-link "libhttp.a" with {
-    http_server,
-    http_client
-}
+link "libc.so" libc
 ```
 
 ## 9. Compilation Directives
@@ -441,7 +439,7 @@ cooking {
 module main
 use stdio
 use stdlib
-link "libhttp.so" as http
+link "libhttp.so" http
 
 alias http_client = http.http_client
 alias time = stdlib.time
@@ -491,7 +489,7 @@ const calculate() multireturn
     if visof(value) != _undef {
       return {0,0}
     }
-    elif visof(ConstValue) == _static {
+    else if visof(ConstValue) == _static {
       return {ConstValue, (ConstValue*2)}
     }
 }
@@ -556,16 +554,16 @@ const visibility_checks() {
     if visof(source_ptr) == _flow && visof(target_ptr) == _flow {
         target_ptr = source_ptr  // flow -> flow safe
     }
-    elif visof(source_ptr) == _static && visof(target_ptr) == _flow {
+    else if visof(source_ptr) == _static && visof(target_ptr) == _flow {
         target_ptr = source_ptr  // static -> flow safe
     }
-    elif visof(source_ptr) == _static && visof(target_ptr) == _static {
+    else if visof(source_ptr) == _static && visof(target_ptr) == _static {
         target_ptr = source_ptr  // static -> static safe
     }
-    elif visof(source_ptr) == _const && visof(target_ptr) == _static {
+    else if visof(source_ptr) == _const && visof(target_ptr) == _static {
         target_ptr = source_ptr  // const -> static safe
     }
-    elif visof(source_ptr) == _const && visof(target_ptr) == _const {
+    else if visof(source_ptr) == _const && visof(target_ptr) == _const {
         target_ptr = source_ptr  // const -> const safe
     }
     else {
