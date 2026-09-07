@@ -1,7 +1,7 @@
 # NihaoC 项目进度与 TODO 清单
 
-> 更新日期：2026-08-30
-> 本文档反映 `ncc/` 活跃开发目录（git `c80309d`）的最新状态，源码已同步至本目录 `ncc/`。
+> 更新日期：2026-09-05
+> 本文档反映 `ncc/` 活跃开发目录（git `7c070ce`，PB 分支）的最新状态，源码已同步至本目录 `ncc/`。
 > 2026-08-29 起仓库分支化：B 方案开发在 `PB` 分支（见 `docs/GIT_CONVENTIONS.md`）。
 
 ---
@@ -22,6 +22,11 @@
 | 后端 A | `-backend=native`：libtcc 进程内生成机器码 | ✅ |
 | 后端 B | IR 中间层骨架（三地址码 + 双后端） | ✅ |
 | 后端 B | IR 双后端端到端跑通（`-backend=ir-c` / `ir-native`） | ✅ |
+| 后端 B | 阶段 1 类型化指针模型（pt[] 类型化 + `.() op=` 复合，含一元 `*p` 收敛移除） | ✅ |
+| PB-25 | 指针语法收敛：移除一元 `*p` 解引用 + 补 `.() op=` 复合，与 A 1.0.x 对齐 | ✅ |
+| PB-26 | 参数前缀 `flow/var/const/static` + 调用点 M2 所有权检查移植 | ✅ |
+| 验收 | PB `xmake test --all` 全矩阵（c/native/ir-c/ir-native）73 PASS / 0 FAIL / 26 SKIP | ✅ |
+| C | ir-c 输出质量：保留变量名（vreg_name 接入 ir.h/ir.c/irparse.c，ir_to_c 用 vrid 输出可读名；结构体直出待 B 真实布局） | ✅ |
 
 ### 1.2 当前代码架构
 
@@ -34,7 +39,7 @@ ncc/
 │   ├── sym.c / type.c / vis.c  符号表 / 类型 / 可见性(存储期)分析
 │   └── stdlib.c                 内置库
 ├── 后端（4 种可切换，-backend=）
-│   ├── codegen.c / cgen.c       C 文本生成（默认后端，外部 tcc 编译）
+│   ├── cgen.c                     C 文本生成（默认后端，外部 tcc 编译）
 │   ├── native.c                 libtcc 进程内编译并执行/生成可执行文件
 │   └── ir.c / ir.h / ir_to_c.c / ir_to_native.c
 │                               IR 中间层（三地址码）：IR→C、IR→x86-64 汇编
@@ -62,7 +67,7 @@ ncc/
   - `ir_to_native.c`：函数无显式 `return`（如 main 隐式返回）时 IR 无 IR_RET，生成代码缺 `leave; ret` 导致执行流坠落 → 函数尾补隐式返回；
   - `ir_to_c.c`：为用户函数生成前置原型，消除"调用先于定义"的隐式声明。
   - 验证：hello.nc 四后端（c/native/ir-c/ir-native）输出一致；13/13 回归通过；调用先于定义场景双后端通过。
-- [ ] **统一后端管线**：当前存在"parser→C 文本"与"irparse→IR→C/asm"两条并行管线，需决策最终走向——若以 IR 为长期架构，则 parser.c 逐步替换为 irparse.c 的全量版本，避免三套 C 生成（codegen.c / cgen.c / ir_to_c.c）长期并存。
+- [ ] **统一后端管线**：当前存在"parser→C 文本"与"irparse→IR→C/asm"两条并行管线，需决策最终走向——若以 IR 为长期架构，则 parser.c 逐步替换为 irparse.c 的全量版本，避免两套 C 生成（cgen.c / ir_to_c.c）长期并存。（早期第三套 codegen.c 直通后端已于 2026-09-01 删除，见 docs/LEGACY_CODEGEN.md）
 - [~] **IR 层数据模型扩展**：浮点(f64/x87+riscv D)、64 位整型、struct(含 sret 返回/参数展开)、数组下标、指针运算、位运算、字节读写(LOAD8/STORE8)、.() 解引用均已覆盖（PB-1/3/4/13/14/16/18 + 位域 + 动态字符串）。struct 整体赋值拷贝（2026-08-19 完成：b = a 逐成员 MOV，union 1 槽）。**嵌套 struct（2026-08-19 完成）**：IrAggType 加 mtype/moff/mslots——成员类型递归解析、agg_compute_offsets 递归算偏移（union=1 槽）、链式成员访问 l.a.x（读/写/复合/位域）、整体赋值按 mslots 展开——ir_nested.nc IR_SUBSET 四后端一致。**嵌套初始化列表（2026-08-26 完成）**：IR ir_agg_init 递归（base+moff[k] 槽起点）+ 全量 parse_init_list 递归。**f32 严格宽度（2026-08-20 完成）**：IR_FTRUNC 存储截断（x86 fstps/flds、riscv/loongarch fcvt.s.d、arm64 fcvt s0,d0）。**union 嵌套（2026-08-27 完成）**：mslots=最大成员槽数（防嵌套链式访问越界）。**✅ 数据模型余项全部清零**。
 - [ ] **IR native 后端寄存器分配**：`ir_to_native.c` 目前虚拟寄存器全部映射为 rbp 栈槽（无寄存器分配），性能与调用约定（Windows x64 shadow space / SysV）需完善，并支持浮点调用。
 
@@ -83,10 +88,11 @@ ncc/
 
 ### P3 — 代码卫生
 
-- [ ] 清理 `test/` 下的生成二进制（f1b、f4 等），改为构建目录输出。
-- [ ] 评估 codegen.c（旧）与 cgen.c / ir_to_c.c 的重复度，逐步收敛。
-- [ ] linker.c 与后端的关系梳理（当前仅 default 后端使用）。
+- [x] **清理生成二进制（2026-09-05 登记并闭环）**：源码树生成产物统一落 `build/`（xmake.lua `rule "nihao"` 与 `task "test"` 均写 `build/tests/<backend>/...`），`tests/pos`、`tests/err` 仅存 `.nc`/`.expect`；`ncc/.gitignore` 已忽略 `build/`、`a.out`、`a.out.c`，历史 `test/` 死项（f1b/f4）清理说明。源码根目录遗留的 `ncc/a.out` 已删除。
+- [x] **收敛后端生成器（2026-09-01 完成）**：codegen.c（旧直通后端）已删除，仅存 cgen.c（parser→C）与 ir_to_c.c（IR→C）双生成器；设计归档见 docs/LEGACY_CODEGEN.md。
+- [x] **linker.c 与后端的关系梳理（2026-09-05 完成）**：头注释精确化——本模块为"库声明收集器"，`link` 指令写入点仅 A/默认后端链路 `parser.c`（`link_add_library`）；消费方 `native.c:144`/`stdlib.c:94` 读取 `link_libs` 交 tcc；**IR 后端链路 `irparse.c` 当前不调用本模块**（`link` 指令在 IR 双后端未生效），该接入归属 2.0 阶段 2「link/use 跨文件」项（路线图 A）。
 - [x] 根目录 `docs/archive/Chinese.md.bak`（2026-08-20 用户确认后删除）。
+- [x] **cgen `void*` 赋值告警清理（2026-09-05 登记并修复）**：`xmake test --all` PB 全量验收中，c/native 后端编译 `ir_struct` 生成的 C 出现 `warning: assignment makes pointer from integer without a cast`（`build/tests/c/ir_struct.exe.c:26`）。根因：A 方案 `cgen.c` 把 `void*`/`char[]`（`TYPE_STRING`）通用指针映射为 C 的 `void*`/`char*`，赋值时由整型初值赋值触发 C 编译器 warning；属内部代码生成历史现象，与指针语法收敛无关（NihaoC 把 `char[]`/`void` 当 8 字节不透明槽，整数初值合法，与 IR 槽模型一致）。**修复（2026-09-05）**：`parser.c` 的 `parse_init_list` 接收被初始化变量类型，按成员位置取成员类型，对"整数初值 → 指针成员/元素"加 `(T*)` 显式转换（生成 `Person p = {(char*)100, 25, 90}`）；新增 `init_elem_type`/`is_pointer_like` 辅助函数。验收 `xmake test --all` 全矩阵 73 PASS / 0 FAIL / 26 SKIP，**0 warning**。
 
 ---
 
@@ -164,25 +170,38 @@ ncc/
 
 ### 架构决策
 - [x] **PB-24 统一管线（2026-08-30 定案：保留双路线，A=1.0 产品线 / B=2.0 演进线）**：IR 语法覆盖全量后决策条件满足（STAGE_SUMMARY §3.1 差距清零），ltree 拍板保留双管线并赋予时间线定位——A 方案先做对外可用 **1.0**（指针声明语法为唯一硬缺口，特性冻结只修 bug/文档/发布），B 方案作为下一代 **2.0** 持续演进（阶段 1 类型化指针 → 阶段 2 能力平移 M2/link/布局函数 → 阶段 3 质量性能 → 阶段 4 新特性）。清单与分支计划见 `docs/VERSIONING_ROADMAP.md`（NihaoC PB 06221e9）；GIT_CONVENTIONS 分支语义已同步更新。
+- [x] **B 方案 2.0 阶段 1 类型化指针模型（2026-08-31 完成，2026-09-04 指针语法收敛）**：pt[] 表语义扩展——`p = &标量` 记录 `PT_SCALAR(code)`（-2-code 编码，与聚合索引 >=0 区分，-1 保留非指针），聚合/标量/枚举三分支记录；类型化解引用读按指向类型标记浮点（f64/f32 → double vreg，防位模式被当整数）；类型化写按指向类型 coerce（窄型 TRUNC 截断 / double ITOD）；复合赋值 RMW（LOAD→op→STORE 含类型协调）；指针算术 `p+k` 首次加法项 ×8 槽宽缩放（与数组寻址 &arr[k]=base+k*8 一致；链式 p+k+1 保持字节语义——NihaoC 无 C 连续指针算术，已文档化）。用例 ir_ptr2.nc（IR_SUBSET，5 组断言：读/写/narrow 截断/double/复合+算术），**四后端一致 0 FAIL**（Windows 全矩阵 31 用例一致性全 PASS；WSL Ubuntu-24.04 ir-c 实测 6 断言输出一致）。**注**：阶段 1 初版以一元 `*p` 读/写/复合实现上述能力；2026-09-04 指针语法收敛（PB-25）将一元 `*p` 从 B 方案移除，等价能力改由 `.() = e` / `.() op=` 提供（与 A 方案 1.0.x 一致），解引用统一 `.()` / `.(T)` / `->`。
+
+- [x] **PB-25 指针语法收敛（对齐 PA 1.0.x：移除一元 `*p` 解引用 + 补 `.() op=` 复合，2026-09-04 完成）**：B 方案（irparse.c）移除一元 `*p` 语法并新增 `.() op=` 复合，与 A 方案 1.0.x 收敛一致：
+  - **移除一元 `*p` 解引用**：`ir_primary` 的 `*p` 类型化读、`ir_stmt` 的 `*p = e` / `*p op=` 类型化写+复合 RMW、`ir_stmt` 兜底 `*p` 读/写 三处全部改为 `nihao_error` + 吞 token（防 fallthrough 死循环）；乘法 `*` 在 `ir_term`/`ir_const` 不受影响。
+  - **补 `.() op= e` 复合解引用**：`ir_stmt` 的 `.() = e` 写块新增 `TOK_PLUS_ASSIGN`/`MINUS_ASSIGN`/`STAR_ASSIGN`/`SLASH_ASSIGN`/`PERCENT_ASSIGN` 分支——LOAD 当前值 → 按指向类型协调（double 指向走 FADD/FSUB/FMUL/FDIV 且 LOAD 结果直接 `ir_set_double` 勿 ITOD）→ op → 按指向类型 `ir_coerce` 截断 → STORE。覆盖 int/double/narrow 的 `+= -= *= /= %=`。
+  - **顺带修复 2 个既有 IR 后端正确性缺陷**（此前被 `ir_ptr2.nc` 无 `.expect` + 跨后端一致性检查"错得一样也算 PASS"掩盖）：① `.() read` 对浮点指向（f64/f32）标记结果 vreg 为 double，避免后续赋值/运算把位模式当整数 ITOD 误转；② `.() = e` / `.() op=` 按**指向类型** `pt[vi]` 截断（窄型 TRUNC / double→int 兜底），原代码误用指针自身类型 `vtype[vi]` 导致窄写不截断。
+  - **测试**：`ir_ptr2.nc` 改为 `p.() += 2` / `pd.() += 1.0` / `pc.() += 1` / `p.() *= 3` / `p.() -= 10` 复合断言（含 int/double/narrow/mul/sub），四后端一致 0 FAIL。
+  - **回归**：`xmake test --all` 全矩阵（c/native/ir-c/ir-native）**0 FAIL**，`ir_ptr.nc`/`ir_ptr2.nc`/`ir_slice.nc` 四后端一致。
+
+- [x] **PB-26 参数前缀 + M2 所有权检查移植（2026-09-04 完成，与 PB-25 同期提交 `e09e609`/`5abde45`）**：B 方案（irparse.c）移植 A 方案 M2 静态检查能力：
+  - **参数前缀 `flow/var/const/static`**：函数参数声明支持可见性前缀，记录到变量表 `vvis`，与 `visof(x)` / `is _flow` 等可见性模式对齐（PB-5 变量前缀已覆盖局部变量，本项补齐参数位）。
+  - **调用点 M2 所有权检查**：调用表达式处按参数前缀执行所有权/借用检查（冻结/失效状态机），`err/m2a..m2e` 系列用例在 ir-c/ir-native 双后端转正为 PASS（此前 SKIP）。
+  - **回归**：`xmake test --all` 全矩阵 0 FAIL；err 测试四后端一致。
 
 ### is 模式匹配升级（2.0，2026-09-01 规范定案）
-- [ ] **PB-25 `is` 模式匹配全量对齐新规范**（依据 docs：`is` 仅配合 `while`、移除 `=>`、模式扩展、结构体/ADT 预留；`__is_val` 类型等于 while 条件类型，R1–R4 见 Chinese.md §6.1）：
+- [ ] **PB-27 `is` 模式匹配全量对齐新规范**（依据 docs：`is` 仅配合 `while`、移除 `=>`、模式扩展、结构体/ADT 预留；`__is_val` 类型等于 while 条件类型，R1–R4 见 Chinese.md §6.1）：
   - **Bug 修复**
-    - [ ] PB-25.1 `do` 内 `is` 拒绝（对齐 do 不支持 is，避免静默匹配外层 while 的 `__is_val`）
-    - [ ] PB-25.2 畸形模式 `is -` / `is 5..` 强制校验下一 token，否则报错（irparse.c:2029-2061）
-    - [ ] PB-25.3 VAR/UNDEF 数值与 C 后端统一为同一套（irparse.c:215-220；PA 冻结线不补 cgen，跨后端一致性以 IR 侧为准并在测试中固化）
-    - [ ] PB-25.4 反向范围 `is 5..2` 编译期检查 lo≤hi，否则警告/报错（irparse.c:2052）
+    - [ ] PB-27.1 `do` 内 `is` 拒绝（对齐 do 不支持 is，避免静默匹配外层 while 的 `__is_val`）
+    - [ ] PB-27.2 畸形模式 `is -` / `is 5..` 强制校验下一 token，否则报错（irparse.c:2029-2061）
+    - [ ] PB-27.3 VAR/UNDEF 数值与 C 后端统一为同一套（irparse.c:215-220；PA 冻结线不补 cgen，跨后端一致性以 IR 侧为准并在测试中固化）
+    - [ ] PB-27.4 反向范围 `is 5..2` 编译期检查 lo≤hi，否则警告/报错（irparse.c:2052）
   - **模式扩展**
-    - [ ] PB-25.5 通配符 `_` 支持（irparse.c:2130，跳过比较恒匹配）
-    - [ ] PB-25.6 移除 `=>` 箭头形式（irparse.c:2138；token.h TOK_FAT_ARROW 在 is 中的使用）
-    - [ ] PB-25.7 `__is_val` 类型感知，不再硬编码 int（i64/指针/float 条件不截断）
-    - [ ] PB-25.8 清理重复不可达可见性分支（irparse.c:2116-2129）
-    - [ ] PB-25.9 `ncc.h` Visibility 枚举补 `VIS_VAR`（ncc.h:61-67，PB-25.3 前置）
+    - [ ] PB-27.5 通配符 `_` 支持（irparse.c:2130，跳过比较恒匹配）
+    - [ ] PB-27.6 移除 `=>` 箭头形式（irparse.c:2138；token.h TOK_FAT_ARROW 在 is 中的使用）
+    - [ ] PB-27.7 `__is_val` 类型感知，不再硬编码 int（i64/指针/float 条件不截断）
+    - [ ] PB-27.8 清理重复不可达可见性分支（irparse.c:2116-2129）
+    - [ ] PB-27.9 `ncc.h` Visibility 枚举补 `VIS_VAR`（ncc.h:61-67，PB-27.3 前置）
   - **依赖类型系统演进（先不排期，纳入 2.0 待办）**
-    - [ ] PB-25.10 结构体解构模式 `is Point(x, y)`（前置：类型感知模式匹配框架）
-    - [ ] PB-25.11 ADT / 带载荷枚举变体 `is Some(v)`（前置：语言先支持 ADT 类型）
-    - [ ] PB-25.12 穷尽检查告警（前置：枚举/ADT 完整变体列表）
-- [ ] **PB-26 `is` 模式匹配测试补充**：`_var`/`_undef`/`_const`/`_static` 模式、枚举常量模式、标识符变量绑定、通配符 `_`、`do`+`is` 拒绝用例、错误路径（`is -`、`is 5..`、循环外 `is`、反向范围）、VAR/UNDEF 跨后端一致性；覆盖后并入 IR_SUBSET 白名单跑四后端矩阵
+    - [ ] PB-27.10 结构体解构模式 `is Point(x, y)`（前置：类型感知模式匹配框架）
+    - [ ] PB-27.11 ADT / 带载荷枚举变体 `is Some(v)`（前置：语言先支持 ADT 类型）
+    - [ ] PB-27.12 穷尽检查告警（前置：枚举/ADT 完整变体列表）
+- [ ] **PB-28 `is` 模式匹配测试补充**：`_var`/`_undef`/`_const`/`_static` 模式、枚举常量模式、标识符变量绑定、通配符 `_`、`do`+`is` 拒绝用例、错误路径（`is -`、`is 5..`、循环外 `is`、反向范围）、VAR/UNDEF 跨后端一致性；覆盖后并入 IR_SUBSET 白名单跑四后端矩阵
 
 ---
 
