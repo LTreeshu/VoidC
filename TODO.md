@@ -116,6 +116,8 @@ ncc/
 - [x] **PA-10 可用性语义（已于 2026-08-06 完成）**：新增 native_memory_available()（Windows 0 / 其他 1），run_mode 分支改用它替代 #ifdef
 - [x] **PA-11 tcc 目录探测重复**：native.c 与 xmake.lua 各一套，易漂移（已记录；建议后续以 NIHAO_TCC_DIR 为唯一来源）
 - [x] **PA-12 A 方案 1.0 发布（2026-08-31 完成）**：门禁验证 ✅（c/native 各 12P/0F/5S + examples 6/6，Windows）；Linux 实测 ✅（PA-9，c/native 各 12P/0F/6S + examples 6/6 + `-run` 修复）；README 更新 ✅（安装/CLI/后端表 1.0/2.0 范围）；BNF v2.0 终校 ✅（`=>`/`->`/`T*` 补全，中英文档同步）；CHANGELOG.md 建立 ✅；本地 `v1.0.0` tag ✅（commit 0aebcb7，合 main + push 由 ltree 决定，2026-08-31 已授权执行）。发布后 PA 分支进入冻结维护态
+- [ ] **PA-13 `is` 移除 `=>` 箭头形式（2026-09-01 规范定案的冻结例外）**：文档已删除单语句 `=>` 形式，C 后端 parser.c:1160 parse_is_stmt 的 TOK_FAT_ARROW 分支移除，只保留块形式 `is <pattern> { ... }`。属规范合规，允许在冻结线执行
+- [ ] **PA-14 清理废弃死代码（冻结例外·代码卫生）**：parser.c:2449-2556 的 `parse_statement_full` / `parse_function_full` 已废弃且无调用点，删除
 
 ---
 
@@ -181,6 +183,25 @@ ncc/
   - **参数前缀 `flow/var/const/static`**：函数参数声明支持可见性前缀，记录到变量表 `vvis`，与 `visof(x)` / `is _flow` 等可见性模式对齐（PB-5 变量前缀已覆盖局部变量，本项补齐参数位）。
   - **调用点 M2 所有权检查**：调用表达式处按参数前缀执行所有权/借用检查（冻结/失效状态机），`err/m2a..m2e` 系列用例在 ir-c/ir-native 双后端转正为 PASS（此前 SKIP）。
   - **回归**：`xmake test --all` 全矩阵 0 FAIL；err 测试四后端一致。
+
+### is 模式匹配升级（2.0，2026-09-01 规范定案）
+- [ ] **PB-27 `is` 模式匹配全量对齐新规范**（依据 docs：`is` 仅配合 `while`、移除 `=>`、模式扩展、结构体/ADT 预留；`__is_val` 类型等于 while 条件类型，R1–R4 见 Chinese.md §6.1）：
+  - **Bug 修复**
+    - [ ] PB-27.1 `do` 内 `is` 拒绝（对齐 do 不支持 is，避免静默匹配外层 while 的 `__is_val`）
+    - [ ] PB-27.2 畸形模式 `is -` / `is 5..` 强制校验下一 token，否则报错（irparse.c:2029-2061）
+    - [ ] PB-27.3 VAR/UNDEF 数值与 C 后端统一为同一套（irparse.c:215-220；PA 冻结线不补 cgen，跨后端一致性以 IR 侧为准并在测试中固化）
+    - [ ] PB-27.4 反向范围 `is 5..2` 编译期检查 lo≤hi，否则警告/报错（irparse.c:2052）
+  - **模式扩展**
+    - [ ] PB-27.5 通配符 `_` 支持（irparse.c:2130，跳过比较恒匹配）
+    - [ ] PB-27.6 移除 `=>` 箭头形式（irparse.c:2138；token.h TOK_FAT_ARROW 在 is 中的使用）
+    - [ ] PB-27.7 `__is_val` 类型感知，不再硬编码 int（i64/指针/float 条件不截断）
+    - [ ] PB-27.8 清理重复不可达可见性分支（irparse.c:2116-2129）
+    - [ ] PB-27.9 `ncc.h` Visibility 枚举补 `VIS_VAR`（ncc.h:61-67，PB-27.3 前置）
+  - **依赖类型系统演进（先不排期，纳入 2.0 待办）**
+    - [ ] PB-27.10 结构体解构模式 `is Point(x, y)`（前置：类型感知模式匹配框架）
+    - [ ] PB-27.11 ADT / 带载荷枚举变体 `is Some(v)`（前置：语言先支持 ADT 类型）
+    - [ ] PB-27.12 穷尽检查告警（前置：枚举/ADT 完整变体列表）
+- [ ] **PB-28 `is` 模式匹配测试补充**：`_var`/`_undef`/`_const`/`_static` 模式、枚举常量模式、标识符变量绑定、通配符 `_`、`do`+`is` 拒绝用例、错误路径（`is -`、`is 5..`、循环外 `is`、反向范围）、VAR/UNDEF 跨后端一致性；覆盖后并入 IR_SUBSET 白名单跑四后端矩阵
 
 ---
 
