@@ -1,0 +1,90 @@
+# NihaoC 项目路线图
+
+> 更新日期：2026-09-07
+> 本文件为跨分支共享层（里程碑、架构概览、通用待办、推荐下一步），所有分支保持一致。
+> 分支特有待办见 `TODO-PA.md`（1.0 冻结线）和 `TODO-PB.md`（2.0 IR 演进）。
+
+---
+
+## 一、里程碑（git 历史）
+
+| 里程碑 | 内容 | 状态 |
+| ------ | ---- | ---- |
+| 基线 | 导入 ncc 骨架现状 | ✅ |
+| M0 | 复活骨架：统一 token 命名、补关键字、词法最长匹配、恢复编译管线 | ✅ |
+| M1 | 表达式/声明/函数/语句解析 + C 后端单趟转 C（端到端可运行） | ✅ |
+| M1 完善 | 修复数组/位域/for/别名/while 系列 bug（11 个测试通过） | ✅ |
+| M2 | 所有权/借用静态分析：存储期矩阵 + 冻结/失效状态机 + 作用域解冻 | ✅ |
+| M3 | use 跨文件解析 + flow 自动释放 + print 映射 + main 返回 0 | ✅ |
+| M4 | CLI 工具链（init/build/run/debug/lex）+ 回归测试套件 | ✅ |
+| 后端 A | `-backend=native`：libtcc 进程内生成机器码 | ✅ |
+| 后端 B | IR 中间层骨架（三地址码 + 双后端） | ✅ |
+| 后端 B | IR 双后端端到端跑通（`-backend=ir-c` / `ir-native`） | ✅ |
+| 后端 B | 阶段 1 类型化指针模型（pt[] 类型化 + `.() op=` 复合，含一元 `*p` 收敛移除） | ✅ |
+| PB-25 | 指针语法收敛：移除一元 `*p` 解引用 + 补 `.() op=` 复合，与 A 1.0.x 对齐 | ✅ |
+| PB-26 | 参数前缀 `flow/var/const/static` + 调用点 M2 所有权检查移植 | ✅ |
+| 验收 | PB `xmake test --all` 全矩阵（c/native/ir-c/ir-native）73 PASS / 0 FAIL / 26 SKIP | ✅ |
+| C | ir-c 输出质量：保留变量名（vreg_name 接入 ir.h/ir.c/irparse.c，ir_to_c 用 vrid 输出可读名；结构体直出待 B 真实布局） | ✅ |
+
+## 二、当前代码架构
+
+```
+ncc/
+├── 前端
+│   ├── lexer.c / token.h        词法分析（最长匹配）
+│   ├── parser.c                 表达式/声明/函数/语句解析（直接转 C 文本）
+│   ├── irparse.c                IR 前端（三地址码）
+│   ├── module.c                 use 跨文件模块解析
+│   ├── sym.c / type.c / vis.c  符号表 / 类型 / 可见性(存储期)分析
+│   └── stdlib.c                 内置库
+├── 后端（4 种可切换，-backend=）
+│   ├── cgen.c                     C 文本生成（默认后端，外部 tcc 编译）
+│   ├── native.c                 libtcc 进程内编译并执行/生成可执行文件
+│   └── ir.c / ir.h / ir_to_c.c / ir_to_native.c
+│                               IR 中间层（三地址码）：IR→C、IR→x86-64 汇编
+│   └── ir_x86_64.c / ir_riscv64.c / ir_arm64.c / ir_loongarch64.c
+│                               四架构后端（TargetBackend 抽象）
+├── ir_backend.c                 后端注册表 + 统一骨架
+├── linker.c                     链接辅助
+├── ncc.c / ncc.h                CLI 入口：init/build/run/debug/lex + 后端选择
+├── Makefile / xmake.lua         双构建系统（tcc 工具链）
+├── test/                        手工示例（.nc）
+├── tests/pos, tests/err        回归测试套件
+├── arch/                        x86/arm/loongarch/riscv（目录已建，内容为空）
+├── editors/sublime              Sublime Text 语法高亮
+└── myapp/                       CLI init 生成的示例项目
+```
+
+---
+
+## 三、通用待办
+
+### P0 — 核心功能缺口
+
+- [ ] **统一后端管线**：当前存在"parser→C 文本"与"irparse→IR→C/asm"两条并行管线，需决策最终走向——若以 IR 为长期架构，则 parser.c 逐步替换为 irparse.c 的全量版本，避免两套 C 生成（cgen.c / ir_to_c.c）长期并存。（早期第三套 codegen.c 直通后端已于 2026-09-01 删除，见 docs/LEGACY_CODEGEN.md）
+- [ ] **IR native 后端寄存器分配**：`ir_to_native.c` 目前虚拟寄存器全部映射为 rbp 栈槽（无寄存器分配），性能与调用约定（Windows x64 shadow space / SysV）需完善，并支持浮点调用。
+
+### P1 — 工程质量
+
+- [ ] **构建系统统一**：Makefile 与 xmake.lua 双轨并存，需明确主用一套（建议 xmake），另一套标记 legacy；`make test` 内的测试用例仍是旧语法，需更新。
+
+### P2 — 架构与扩展
+
+- [ ] **CLI 完善**：`debug` 子命令实现、`init` 模板与当前语法对齐、错误信息带行列定位并中文化。
+- [~] **文档与实现对齐（2026-08-20 增量更新）**：STAGE_SUMMARY 刷新 8/20；BNF 补 label/len/cooking 函数定义；README 后端表四架构+示例实测；Chinese/English 补 len/编译期函数/goto label/嵌套/f32 严格宽度；archive 备份已删（P3 卫生项闭环）。剩余：全量校对（逐节核对 BNF v2.0 差异，工作量大，选做）。
+- [ ] **跨平台验证**：`-run`（内存执行）注释为 Linux only；Windows 下 libtcc 动态链接（NIHAO_TCC_DIR 探测）需文档化。
+
+### P3 — 代码卫生
+
+- [x] **清理生成二进制（2026-09-05 登记并闭环）**：源码树生成产物统一落 `build/`（xmake.lua `rule "nihao"` 与 `task "test"` 均写 `build/tests/<backend>/...`），`tests/pos`、`tests/err` 仅存 `.nc`/`.expect`；`ncc/.gitignore` 已忽略 `build/`、`a.out`、`a.out.c`，历史 `test/` 死项（f1b/f4）清理说明。源码根目录的 `ncc/a.out` 已删除。
+- [x] **收敛后端生成器（2026-09-01 完成）**：codegen.c（旧直通后端）已删除，仅存 cgen.c（parser→C）与 ir_to_c.c（IR→C）双生成器；设计归档见 docs/LEGACY_CODEGEN.md。
+- [x] **linker.c 与后端的关系梳理（2026-09-05 完成）**：头注释精确化——本模块为"库声明收集器"，`link` 指令写入点只 A/默认后端链路 `parser.c`（`link_add_library`）；消费方 `native.c:144`/`stdlib.c:94` 读取 `link_libs` 交 tcc；**IR 后端链路 `irparse.c` 当前不调用本模块**（`link` 指令在 IR 双后端未生效），该接入归属 2.0 阶段 2「link/use 跨文件」项（路线图 A）。
+
+---
+
+## 四、推荐下一步（建议执行顺序）
+
+1. **扩 IR 前端语法**（P0）：以 tests/pos 现有用例为验收，逐个迁移到 irparse。
+2. **多后端回归矩阵**（P1）：先让 4 个后端在同一测试集上"行为一致"。
+3. **构建统一为 xmake**（P1）：清理 Makefile 入口，`make test` 用例同步更新。
+4. 随后再推进 P2/P3 各项。
